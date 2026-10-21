@@ -1,6 +1,6 @@
 # Spec 02: Interfaces de Usuario Restantes (MVP Visual)
 
-**Estado:** Draft  
+**Estado:** Aprobado  
 **Fecha:** 2026-10-21  
 **Depende de:** 01-biblioteca-juegos-mvp.md  
 
