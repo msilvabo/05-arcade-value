@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.crt-overlay{pointer-events:none;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.35) 50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03));background-size:100% 3px,6px 100%;}.scanline-sweep{pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,0) 50%,rgba(0,245,255,0.08) 70%,rgba(255,255,255,0));background-size:100% 30px;animation:scanlinesweep 8s linear infinite;}@keyframes scanlinesweep{0%{background-position:0 -100vh;}100%{background-position:0 100vh;}}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary": "#303300",
+          "inverse-on-surface": "#303036",
+          "surface-container-lowest": "#0e0e13",
+          "secondary-fixed": "#ffd9de",
+          "surface-container-highest": "#35343a",
+          "on-error": "#690005",
+          "on-tertiary-fixed": "#1c1d00",
+          "on-error-container": "#ffdad6",
+          "surface-bright": "#39383e",
+          "tertiary-fixed-dim": "#c7cf00",
+          "surface-tint": "#00dce5",
+          "surface-container-low": "#1b1b20",
+          "on-primary-fixed-variant": "#004f53",
+          "tertiary-container": "#dee700",
+          "on-primary": "#003739",
+          "error": "#ffb4ab",
+          "on-tertiary-container": "#616600",
+          "surface-container-high": "#2a292f",
+          "on-surface-variant": "#b9caca",
+          "on-background": "#e4e1e9",
+          "inverse-surface": "#e4e1e9",
+          "background": "#131318",
+          "outline": "#849495",
+          "surface-container": "#1f1f25",
+          "tertiary": "#fdffb5",
+          "inverse-primary": "#00696e",
+          "primary": "#e9feff",
+          "on-primary-fixed": "#002021",
+          "secondary-fixed-dim": "#ffb2bf",
+          "tertiary-fixed": "#e3ec00",
+          "surface-dim": "#131318",
+          "on-primary-container": "#006c71",
+          "on-secondary-fixed-variant": "#90003b",
+          "on-secondary-container": "#5a0022",
+          "outline-variant": "#3a494a",
+          "on-secondary": "#660028",
+          "on-tertiary-fixed-variant": "#474a00",
+          "on-secondary-fixed": "#3f0016",
+          "on-surface": "#e4e1e9",
+          "surface-variant": "#35343a",
+          "error-container": "#93000a",
+          "primary-fixed": "#63f7ff",
+          "secondary": "#ffb2bf",
+          "primary-fixed-dim": "#00dce5",
+          "primary-container": "#00f5ff",
+          "secondary-container": "#ff4d80",
+          "surface": "#131318"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-xs": "0.25rem",
+          "space-md": "1rem",
+          "space-sm": "0.5rem",
+          "gutter": "1.25rem",
+          "margin": "2rem",
+          "space-xl": "2.5rem",
+          "space-lg": "1.5rem",
+          "gutter-mobile": "0.75rem",
+          "margin-mobile": "1rem"
+        },
+        "fontFamily": {
+          "body-sm": [
+            "JetBrains Mono"
+          ],
+          "headline-lg": [
+            "Space Mono"
+          ],
+          "label-lg": [
+            "Space Mono"
+          ],
+          "headline-md": [
+            "Space Mono"
+          ],
+          "display-lg": [
+            "Space Mono"
+          ],
+          "label-md": [
+            "Space Mono"
+          ],
+          "label-sm": [
+            "Space Mono"
+          ],
+          "body-md": [
+            "JetBrains Mono"
+          ],
+          "title-sm": [
+            "Space Mono"
+          ],
+          "display-lg-mobile": [
+            "Space Mono"
+          ],
+          "body-lg": [
+            "JetBrains Mono"
+          ],
+          "headline-lg-mobile": [
+            "Space Mono"
+          ]
+        },
+        "fontSize": {
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "18px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg": [
+            "28px",
+            {
+              "lineHeight": "38px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-lg": [
+            "14px",
+            {
+              "lineHeight": "18px",
+              "letterSpacing": "0.08em",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-md": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "0.03em",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg": [
+            "40px",
+            {
+              "lineHeight": "52px",
+              "letterSpacing": "0.08em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-md": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.1em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-sm": [
+            "9px",
+            {
+              "lineHeight": "12px",
+              "letterSpacing": "0.12em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "22px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "title-sm": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg-mobile": [
+            "24px",
+            {
+              "lineHeight": "34px",
+              "letterSpacing": "0.06em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "26px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg-mobile": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "700"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container"><div class="fixed inset-0 crt-overlay z-50 pointer-events-none"></div><div class="fixed inset-0 scanline-sweep z-40 pointer-events-none"></div><header class="fixed top-0 w-full z-30 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.8)]"><div class="h-20 w-full px-space-lg lg:px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><img alt="ARCADE VAULT Logo" class="h-8 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(0,245,255,0.8)]" src="https://lh3.googleusercontent.com/aida/AEtjO1Ui9T1viJF33CFSALwyBdG-wsxPuQ-5XnFXCUhZAkmzR9psaUEb7QRRngKZSi9DC5aBqa4Mstrkkx7rUi9rpCFXjOn-yrEUWcJ8LIVqwwhyl44F-pK1rZ4AiIAXK6F-T5eT7n_EyRuBZScC52sv7lccu9aFHh2sfqLvohj2u0hxhD5HgaEAgfm6jWe7N12B7UnAYf4__PDIS5tKdqEP-KuSwJ9wKpism6RBE6FJpMT5yK2uGbSXcsoXehY"/><div class="flex flex-col"><span class="font-title-sm text-title-sm uppercase tracking-widest text-primary drop-shadow-[0_0_6px_rgba(0,245,255,0.7)]">ARCADE VAULT</span><span class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-wider">SISTEMA V.84.2 // ACTIVO</span></div></div><nav class="hidden xl:flex items-center gap-space-sm" data-active-classes="bg-surface-container-high text-primary-fixed font-bold shadow-[inset_0_-2px_0_0_#00f5ff,0_0_12px_rgba(0,245,255,0.4)]"><a aria-current="page" class="px-space-md py-space-sm uppercase tracking-wider transition-all rounded bg-surface-container-high text-primary-fixed font-bold shadow-[inset_0_-2px_0_0_#00f5ff,0_0_12px_rgba(0,245,255,0.4)]" data-path="biblioteca" href="#">Biblioteca</a><a class="px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all rounded" data-path="salon-de-la-fama" href="#">Salón de la Fama</a><a class="px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all rounded" data-path="autenticacion" href="#">Autenticación</a></nav><div class="flex items-center gap-space-sm lg:gap-space-md shrink-0"><div class="hidden md:flex items-center bg-surface-container-low px-space-sm py-space-xs rounded gap-space-xs"><button class="px-space-xs py-0.5 font-label-sm text-label-sm text-primary-fixed hover:bg-surface-container-high hover:text-on-surface transition-colors rounded uppercase" type="button">SFX: ON</button><span class="text-outline-variant font-label-sm text-label-sm">|</span><button class="px-space-xs py-0.5 font-label-sm text-label-sm text-secondary-fixed hover:bg-surface-container-high hover:text-on-surface transition-colors rounded uppercase" type="button">MÚSICA: 8-BIT</button></div><div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-space-xs rounded shadow-[0_0_10px_rgba(227,236,0,0.25)]"><span class="w-2 h-2 rounded-full bg-tertiary-fixed animate-ping"></span><span class="font-label-md text-label-md text-tertiary-fixed uppercase font-bold tracking-wider">CRÉDITOS: 04</span><span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider hidden sm:inline">[INSERTAR MONEDA]</span></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="hidden lg:flex flex-col text-right"><span class="font-label-sm text-label-sm text-on-surface font-bold tracking-wider uppercase drop-shadow-[0_0_4px_rgba(255,178,191,0.5)]">RETRO_PRO_84</span><div class="flex items-center justify-end gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim inline-block"></span><span class="font-label-sm text-label-sm text-primary-fixed uppercase">ONLINE</span></div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,77,128,0.7)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-20 bg-surface relative min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full relative">
+<!-- HUD Superior Arcade Flotante de Alta Definición -->
+<header class="w-full bg-surface-container-lowest px-space-md lg:px-margin py-space-sm shadow-[0_8px_30px_rgba(0,0,0,0.8)] z-20">
+<div class="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-space-sm">
+<!-- Telemetría Primaria: Puntos y Récord -->
+<div class="flex items-center gap-space-md flex-wrap justify-center">
+<!-- Puntuación Actual -->
+<div class="bg-surface-container-low px-space-md py-space-xs rounded shadow-[inset_0_0_12px_rgba(0,245,255,0.15)] flex flex-col">
+<span class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-widest">PUNTUACIÓN ACTUAL</span>
+<span class="font-headline-md text-headline-md text-primary-container tracking-wider drop-shadow-[0_0_10px_rgba(0,245,255,0.8)]" id="hud-score-display">048,250</span>
+</div>
+<!-- Récord Global -->
+<div class="bg-surface-container-low px-space-md py-space-xs rounded shadow-[inset_0_0_12px_rgba(227,236,0,0.12)] flex flex-col">
+<span class="font-label-sm text-label-sm text-tertiary-fixed tracking-widest uppercase">RÉCORD MÁXIMO</span>
+<span class="font-headline-md text-headline-md text-tertiary tracking-wider drop-shadow-[0_0_10px_rgba(253,255,181,0.7)]">142,500</span>
+</div>
+<!-- Indicador de Nivel -->
+<div class="hidden sm:flex bg-surface-container-high px-space-md py-space-xs rounded items-center gap-space-xs shadow-[0_0_15px_rgba(255,77,128,0.2)]">
+<span class="material-symbols-outlined text-secondary text-[20px] animate-pulse">grid_view</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">FASE ACTIVA</span>
+<span class="font-title-sm text-title-sm text-secondary-fixed tracking-wider uppercase">NV. 04: MATRIZ NEÓN</span>
+</div>
+</div>
+</div>
+<!-- Telemetría Central: Vidas y Piloto -->
+<div class="flex items-center gap-space-lg">
+<!-- Vidas Pixel Art -->
+<div class="flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-0.5">NAVES DE RESERVA</span>
+<div class="flex items-center gap-1.5 bg-surface-container-lowest px-space-sm py-1 rounded">
+<span class="material-symbols-outlined text-secondary-container text-[20px] drop-shadow-[0_0_8px_rgba(255,77,128,0.9)]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="material-symbols-outlined text-secondary-container text-[20px] drop-shadow-[0_0_8px_rgba(255,77,128,0.9)]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="material-symbols-outlined text-secondary-container text-[20px] drop-shadow-[0_0_8px_rgba(255,77,128,0.9)]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="material-symbols-outlined text-outline-variant text-[20px]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+</div>
+</div>
+<!-- Perfil Jugador 1 -->
+<div class="hidden md:flex items-center gap-space-xs bg-surface-container px-space-md py-1.5 rounded">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container animate-ping"></span>
+<div class="flex flex-col text-left">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">JUGADOR 1</span>
+<span class="font-label-lg text-label-lg text-primary tracking-widest uppercase font-bold">RETRO_PRO_84</span>
+</div>
+</div>
+</div>
+<!-- Botones de Acción Rápida -->
+<div class="flex items-center gap-space-xs">
+<button class="group px-space-sm py-1 bg-surface-container-high hover:bg-primary-container text-primary-fixed hover:text-on-primary-container transition-all duration-150 rounded flex items-center gap-1 shadow-[0_0_10px_rgba(0,0,0,0.5)] active:translate-y-0.5" id="btn-pause-toggle" type="button">
+<span class="material-symbols-outlined text-[16px]">pause_circle</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">[P] PAUSA</span>
+</button>
+<button class="group px-space-sm py-1 bg-surface-container-high hover:bg-secondary-container text-secondary hover:text-on-secondary-container transition-all duration-150 rounded flex items-center gap-1 shadow-[0_0_10px_rgba(0,0,0,0.5)] active:translate-y-0.5" id="btn-audio-toggle" type="button">
+<span class="material-symbols-outlined text-[16px]" id="audio-icon">volume_up</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold" id="audio-label">[M] AUDIO</span>
+</button>
+<a class="px-space-sm py-1 bg-surface-container-high hover:bg-surface-variant text-on-surface-variant hover:text-on-surface transition-all duration-150 rounded flex items-center gap-1 shadow-[0_0_10px_rgba(0,0,0,0.5)] active:translate-y-0.5" href="#">
+<span class="material-symbols-outlined text-[16px]">logout</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">[ESC] VAULT</span>
+</a>
+</div>
+</div>
+</header>
+<!-- Escenario Principal del Gabinete Arcade CRT -->
+<div class="relative w-full py-space-md lg:py-space-xl px-space-sm md:px-space-md flex flex-col items-center justify-center overflow-hidden">
+<!-- Resplandor ambiental de tubos catódicos del fondo -->
+<div class="absolute w-[680px] h-[680px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none -top-24"></div>
+<div class="absolute w-[500px] h-[500px] bg-secondary-container/15 rounded-full blur-[120px] pointer-events-none -bottom-20"></div>
+<!-- Chasis Exterior de la Máquina Arcade (Bezel de Madera/Plástico Texturizado) -->
+<div class="relative w-full max-w-4xl bg-surface-container-lowest rounded-3xl p-3 md:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),inset_0_0_40px_rgba(0,0,0,0.9)]">
+<!-- Tornillos & Ribetes de Montaje de Gabinete -->
+<div class="absolute top-3 left-4 flex gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-bright shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-surface-container shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]"></span>
+</div>
+<div class="absolute top-3 right-4 flex gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-container shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-surface-bright shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]"></span>
+</div>
+<div class="text-center pb-2">
+<span class="font-label-sm text-label-sm text-primary-fixed-dim/60 tracking-[0.35em] uppercase font-bold">
+          TAITO 1986 // MODELO CATÓDICO KX-21 // PANTALLA POLICROMÁTICA
+        </span>
+</div>
+<!-- Pantalla CRT Curvada (Interior del Monitor) -->
+<div class="relative w-full aspect-[4/3] max-h-[640px] bg-surface-dim rounded-2xl overflow-hidden shadow-[inset_0_0_50px_rgba(0,0,0,0.95)] flex flex-col justify-between">
+<!-- Reflejo diagonal de cristal y viñeta interna del tubo -->
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-10"></div>
+<div class="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-to-tr from-transparent via-primary/5 to-transparent rotate-12 pointer-events-none z-10"></div>
+<!-- CAMPO DE JUEGO ARKANOID ACTIVO -->
+<div class="relative w-full h-full p-4 md:p-8 flex flex-col justify-between select-none overflow-hidden">
+<!-- Límite Superior: Rejilla Reflectante Superior -->
+<div class="w-full flex justify-between items-center px-4 py-1.5 bg-surface-container-high/60 backdrop-blur rounded shadow-[0_0_10px_rgba(0,245,255,0.3)]">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">DEFLECTOR SUPERIOR ACTIVO</span>
+<div class="flex gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+<span class="font-label-sm text-label-sm text-tertiary-fixed font-bold tracking-widest">MULTI-IMPACTO DISPONIBLE</span>
+</div>
+</div>
+<!-- Matriz de Bloques de Neón Rompibles (Arkanoid Bricks) -->
+<div class="w-full max-w-2xl mx-auto grid grid-cols-8 md:grid-cols-10 gap-1 md:gap-2 my-auto py-2">
+<!-- Fila 1: Bloques Magenta Reforzados (2 Golpes) -->
+<div class="h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] flex items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] flex items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="h-4 md:h-6 bg-secondary-container/40 rounded flex items-center justify-center"></div>
+<div class="h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] flex items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] flex items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] flex items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="h-4 md:h-6 bg-secondary-container/40 rounded flex items-center justify-center"></div>
+<div class="h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] flex items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="hidden md:flex h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<div class="hidden md:flex h-4 md:h-6 bg-secondary-container rounded shadow-[0_0_12px_rgba(255,77,128,0.9)] items-center justify-center">
+<div class="w-full h-0.5 bg-secondary-fixed/70"></div>
+</div>
+<!-- Fila 2: Bloques Cian Quantum -->
+<div class="h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<div class="h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<div class="h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<!-- Bloque en proceso de explosión/destrucción -->
+<div class="h-4 md:h-6 bg-white/90 rounded shadow-[0_0_20px_rgba(255,255,255,1)] animate-ping"></div>
+<div class="h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<div class="h-4 md:h-6 bg-primary-container/20 rounded"></div>
+<div class="h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<div class="h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<div class="hidden md:block h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<div class="hidden md:block h-4 md:h-6 bg-primary-container rounded shadow-[0_0_12px_rgba(0,245,255,0.9)]"></div>
+<!-- Fila 3: Bloques Ácidos Amarillos Multiplicadores -->
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)] flex items-center justify-center text-[10px] text-on-tertiary font-bold">x2</div>
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)]"></div>
+<div class="h-4 md:h-6 bg-tertiary-fixed/30 rounded"></div>
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)]"></div>
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)]"></div>
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)]"></div>
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)] flex items-center justify-center text-[10px] text-on-tertiary font-bold">x2</div>
+<div class="h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)]"></div>
+<div class="hidden md:block h-4 md:h-6 bg-tertiary-fixed rounded shadow-[0_0_14px_rgba(227,236,0,0.9)]"></div>
+<div class="hidden md:block h-4 md:h-6 bg-tertiary-fixed/30 rounded"></div>
+<!-- Fila 4: Bloques Plata Titanio (Indestructibles) -->
+<div class="h-4 md:h-6 bg-surface-container-highest rounded shadow-[0_0_6px_rgba(255,255,255,0.3)] flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+</div>
+<div class="h-4 md:h-6 bg-primary-fixed-dim rounded shadow-[0_0_10px_rgba(0,220,229,0.8)]"></div>
+<div class="h-4 md:h-6 bg-primary-fixed-dim rounded shadow-[0_0_10px_rgba(0,220,229,0.8)]"></div>
+<div class="h-4 md:h-6 bg-surface-container-highest rounded shadow-[0_0_6px_rgba(255,255,255,0.3)] flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+</div>
+<div class="h-4 md:h-6 bg-surface-container-highest rounded shadow-[0_0_6px_rgba(255,255,255,0.3)] flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+</div>
+<div class="h-4 md:h-6 bg-primary-fixed-dim rounded shadow-[0_0_10px_rgba(0,220,229,0.8)]"></div>
+<div class="h-4 md:h-6 bg-primary-fixed-dim rounded shadow-[0_0_10px_rgba(0,220,229,0.8)]"></div>
+<div class="h-4 md:h-6 bg-surface-container-highest rounded shadow-[0_0_6px_rgba(255,255,255,0.3)] flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+</div>
+<div class="hidden md:flex h-4 md:h-6 bg-primary-fixed-dim rounded shadow-[0_0_10px_rgba(0,220,229,0.8)] items-center justify-center"></div>
+<div class="hidden md:flex h-4 md:h-6 bg-primary-fixed-dim rounded shadow-[0_0_10px_rgba(0,220,229,0.8)] items-center justify-center"></div>
+</div>
+<!-- Zona Intermedia de Trayectorias y Cápsulas de Bonus -->
+<div class="relative w-full h-32 md:h-44 pointer-events-none">
+<!-- Cápsula de Bonificación Cayendo: [L] LÁSER -->
+<div class="absolute top-4 left-1/4 animate-bounce bg-secondary-container px-2 py-0.5 rounded shadow-[0_0_15px_rgba(255,77,128,1)] flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-white font-bold tracking-tighter">[L] LÁSER</span>
+<span class="material-symbols-outlined text-[12px] text-white animate-spin">bolt</span>
+</div>
+<!-- Cápsula de Bonificación Cayendo: [E] EXPANDIR -->
+<div class="absolute top-12 right-1/3 bg-tertiary-fixed px-2 py-0.5 rounded shadow-[0_0_15px_rgba(227,236,0,1)] flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-on-tertiary font-bold tracking-tighter">[E] AMPLIAR</span>
+<span class="material-symbols-outlined text-[12px] text-on-tertiary">open_in_full</span>
+</div>
+<!-- Bola de Energía Resplandeciente con Estela Luminosa -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
+<!-- Estelas de partículas -->
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim/40 blur-[1px] mb-0.5"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary-fixed/60 blur-[1px] mb-0.5"></span>
+<!-- Orbe Principal -->
+<div class="w-4 h-4 rounded-full bg-white shadow-[0_0_20px_rgba(0,245,255,1),0_0_8px_rgba(255,255,255,1)] relative flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</div>
+<!-- Chispas de Impacto Dinámico de la bola -->
+<div class="absolute top-2 left-[39%] w-3 h-3 flex items-center justify-center pointer-events-none">
+<span class="absolute w-6 h-0.5 bg-primary-container rotate-45 shadow-[0_0_8px_#00f5ff]"></span>
+<span class="absolute w-6 h-0.5 bg-secondary-container -rotate-45 shadow-[0_0_8px_#ff4d80]"></span>
+</div>
+</div>
+<!-- Base: Paleta Vaus Espacial Interactiva -->
+<div class="w-full relative flex flex-col items-center pb-2">
+<!-- Paleta Nave Vaus -->
+<div class="w-44 md:w-56 h-5 md:h-6 bg-gradient-to-r from-secondary-container via-primary-container to-secondary-container rounded-full shadow-[0_0_25px_rgba(0,245,255,0.8),inset_0_1px_3px_rgba(255,255,255,0.8)] relative flex items-center justify-between px-3">
+<!-- Núcleo de energía de la nave -->
+<div class="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)] animate-ping"></div>
+<div class="h-1.5 w-16 bg-surface-container-lowest/80 rounded-full flex items-center justify-center">
+<span class="font-label-sm text-label-sm text-primary tracking-widest text-[8px]">VAUS-84</span>
+</div>
+<div class="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]"></div>
+<!-- Cañones de plasma instalados -->
+<span class="absolute -top-1.5 left-2 w-1.5 h-3 bg-secondary-fixed rounded-t"></span>
+<span class="absolute -top-1.5 right-2 w-1.5 h-3 bg-secondary-fixed rounded-t"></span>
+</div>
+<!-- Estela de propulsor de plasma -->
+<div class="w-28 h-2 bg-gradient-to-b from-primary-container to-transparent blur-[3px]"></div>
+</div>
+<!-- Overlay Inferior con Banner Informativo CRT -->
+<div class="w-full flex items-center justify-between pt-2 bg-surface-container-lowest/90 px-3 py-1 rounded">
+<span class="font-label-sm text-label-sm text-tertiary-fixed tracking-widest uppercase font-bold">
+              MONEDAS INSERTADAS: 02
+            </span>
+<div class="flex items-center gap-3">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">
+                VELOCIDAD BOLA: 1.25X
+              </span>
+<span class="font-label-sm text-label-sm text-secondary-fixed tracking-widest uppercase">
+                COMBO ACTUAL: X5
+              </span>
+</div>
+</div>
+</div>
+<!-- MODAL OVERLAY DE FIN DE PARTIDA ("GAME OVER / FIN DEL JUEGO") -->
+<div class="absolute inset-0 bg-surface-container-lowest/90 backdrop-blur-md z-30 flex items-center justify-center p-4" id="game-over-modal">
+<!-- Caja de Diálogo con Tubo de Neón Flotante -->
+<div class="relative w-full max-w-lg bg-surface-container-low rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(255,77,128,0.5),inset_0_0_20px_rgba(0,245,255,0.15)] flex flex-col items-center text-center">
+<!-- Etiqueta decorativa superior -->
+<div class="bg-secondary-container px-3 py-0.5 rounded shadow-[0_0_12px_rgba(255,77,128,0.8)] -mt-10 mb-4">
+<span class="font-label-sm text-label-sm text-white uppercase tracking-widest font-bold">ARCADE VAULT • SISTEMA DE CLASIFICACIÓN</span>
+</div>
+<!-- Titular Gigante Pixelado -->
+<h2 class="font-display-lg text-display-lg text-secondary-container tracking-wider uppercase drop-shadow-[0_0_18px_rgba(255,77,128,0.9)] animate-pulse">
+              ★ FIN DEL JUEGO ★
+            </h2>
+<p class="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider mt-1 mb-4">
+              HAS COMPLETADO CON HONOR LA MATRIZ: <span class="text-primary-fixed">NIVEL 04</span>
+</p>
+<!-- Marcador Final Destacado -->
+<div class="w-full bg-surface-container-lowest p-4 rounded mb-4 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] flex flex-col items-center">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1">PUNTUACIÓN TOTAL ACUMULADA</span>
+<span class="font-headline-lg text-headline-lg text-primary tracking-widest font-bold drop-shadow-[0_0_12px_rgba(0,245,255,0.9)]">
+                048,250 PUNTOS
+              </span>
+<div class="mt-2 inline-flex items-center gap-1.5 bg-tertiary-container/20 px-2.5 py-1 rounded">
+<span class="material-symbols-outlined text-tertiary-fixed text-[16px]">military_tech</span>
+<span class="font-label-sm text-label-sm text-tertiary-fixed font-bold tracking-widest uppercase">
+                  ¡NUEVA MEJOR MARCA PERSONAL REGISTRADA!
+                </span>
+</div>
+</div>
+<!-- Campo Interactivo de Iniciales (High Score Tag) -->
+<div class="w-full mb-6">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-2">
+                GUARDAR PUNTUACIÓN EN EL SALÓN DE LA FAMA
+              </label>
+<div class="flex items-center justify-center gap-3">
+<span class="font-label-md text-label-md text-outline uppercase">TAG PILOTO:</span>
+<div class="flex gap-2">
+<input class="w-12 h-12 bg-surface-container-highest text-primary-container font-headline-md text-headline-md text-center uppercase rounded focus:bg-surface-bright focus:text-white shadow-[0_0_10px_rgba(0,245,255,0.4)] outline-none" maxlength="1" type="text" value="R"/>
+<input class="w-12 h-12 bg-surface-container-highest text-primary-container font-headline-md text-headline-md text-center uppercase rounded focus:bg-surface-bright focus:text-white shadow-[0_0_10px_rgba(0,245,255,0.4)] outline-none" maxlength="1" type="text" value="P"/>
+<input class="w-12 h-12 bg-surface-container-highest text-primary-container font-headline-md text-headline-md text-center uppercase rounded focus:bg-surface-bright focus:text-white shadow-[0_0_10px_rgba(0,245,255,0.4)] outline-none" maxlength="1" type="text" value="8"/>
+</div>
+</div>
+</div>
+<!-- Botones Gigantes de Acción Táctil Arcade -->
+<div class="w-full flex flex-col gap-2.5">
+<!-- Botón Primario: Guardar Puntuación -->
+<button class="w-full py-3 bg-primary-container hover:bg-white text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(0,245,255,0.8)] transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-2" id="btn-save-score" type="button">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+                GUARDAR PUNTUACIÓN
+              </button>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+<!-- Botón Secundario: Reiniciar Partida -->
+<button class="py-3 bg-secondary-container hover:bg-secondary text-white font-title-sm text-title-sm uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,77,128,0.7)] transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5" id="btn-restart-game" type="button">
+<span class="material-symbols-outlined text-[20px]">replay</span>
+                  REINTENTAR (1 CRÉDITO)
+                </button>
+<!-- Botón Terciario: Regresar a Biblioteca -->
+<button class="py-3 bg-surface-container-highest hover:bg-surface-bright text-on-surface font-title-sm text-title-sm uppercase tracking-wider rounded transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5" id="btn-exit-vault" type="button">
+<span class="material-symbols-outlined text-[20px]">door_open</span>
+                  IR AL VAULT
+                </button>
+</div>
+</div>
+<!-- Feedback de Almacenamiento -->
+<div class="hidden mt-3 text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-widest animate-pulse" id="save-status-msg">
+              ✓ DATOS TRANSMITIDOS SATISFACTORIAMENTE AL NODO PRINCIPAL
+            </div>
+</div>
+</div>
+</div>
+<!-- Marquesina de Botones de Cabina y Altavoces Frontales -->
+<div class="mt-4 pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
+<!-- Rejilla de Ventilación y Altavoces Estéreo -->
+<div class="flex gap-1.5">
+<div class="w-1.5 h-6 bg-surface-container rounded-full"></div>
+<div class="w-1.5 h-6 bg-surface-container rounded-full"></div>
+<div class="w-1.5 h-6 bg-surface-container rounded-full"></div>
+<div class="w-1.5 h-6 bg-surface-container rounded-full"></div>
+<div class="w-1.5 h-6 bg-surface-container rounded-full"></div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-secondary-container shadow-[0_0_8px_rgba(255,77,128,0.8)]"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">CANAL VÍDEO RGB: ÓPTIMO</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary-container shadow-[0_0_8px_rgba(0,245,255,0.8)]"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">SINCRONIZACIÓN CRT: 60 HZ</span>
+</div>
+</div>
+<!-- Slot de Retorno de Moneda Mecánico -->
+<div class="flex items-center gap-2 bg-surface-container-high px-3 py-1 rounded">
+<span class="material-symbols-outlined text-tertiary-fixed text-[16px]">paid</span>
+<span class="font-label-sm text-label-sm text-tertiary-fixed tracking-widest uppercase">RANURA DE 25 CENTAVOS</span>
+</div>
+</div>
+</div>
+<!-- Guía de Control para el Jugador -->
+<div class="w-full max-w-4xl mt-space-md grid grid-cols-1 md:grid-cols-3 gap-space-sm text-center">
+<div class="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed text-[18px]">arrow_back</span>
+<span class="material-symbols-outlined text-primary-fixed text-[18px]">arrow_forward</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">TECLAS FLECHA: MOVER VAUS</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2">
+<span class="px-2 py-0.5 bg-surface-container-high text-tertiary font-label-sm text-label-sm rounded uppercase font-bold">ESPACIO</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">LANZAR BOLA / DISPARAR LÁSER</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2">
+<span class="px-2 py-0.5 bg-surface-container-high text-secondary font-label-sm text-label-sm rounded uppercase font-bold">TAB</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">TABLA DE POSICIONES EN VIVO</span>
+</div>
+</div>
+</div>
+<!-- Panel de Telemetría Inferior del Nodo Arcade -->
+<footer class="w-full bg-surface-container-lowest py-space-sm px-space-md lg:px-margin shadow-[0_-4px_15px_rgba(0,0,0,0.7)] z-20">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-space-xs text-center md:text-left">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_rgba(0,245,255,0.8)]"></span>
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-widest font-bold">
+          MODO: SANDBOX LOCAL • CONECTADO A SERVIDOR ARCADE VAULT REGION-EU
+        </span>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+          PING SALA: <strong class="text-primary-fixed">14 MS</strong>
+</span>
+<span class="font-label-sm text-label-sm text-outline-variant">|</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+          EMULADOR CORE: <strong class="text-tertiary-fixed">MAME-V84-WEBASM</strong>
+</span>
+</div>
+</div>
+</footer>
+<!-- Script de Micro-Interacciones de Partida y Modal -->
+<script>
+    (function() {
+      const modal = document.getElementById('game-over-modal');
+      const btnSaveScore = document.getElementById('btn-save-score');
+      const btnRestartGame = document.getElementById('btn-restart-game');
+      const btnExitVault = document.getElementById('btn-exit-vault');
+      const saveStatusMsg = document.getElementById('save-status-msg');
+      const btnPause = document.getElementById('btn-pause-toggle');
+      const btnAudio = document.getElementById('btn-audio-toggle');
+      const audioIcon = document.getElementById('audio-icon');
+      const audioLabel = document.getElementById('audio-label');
+
+      let audioEnabled = true;
+
+      // Guardar puntuación con respuesta visual
+      if (btnSaveScore) {
+        btnSaveScore.addEventListener('click', function() {
+          btnSaveScore.disabled = true;
+          btnSaveScore.classList.add('opacity-50');
+          if (saveStatusMsg) {
+            saveStatusMsg.classList.remove('hidden');
+          }
+          setTimeout(() => {
+            btnSaveScore.textContent = 'REGISTRADO EN TABLA';
+            btnSaveScore.classList.remove('bg-primary-container');
+            btnSaveScore.classList.add('bg-tertiary-container', 'text-on-tertiary');
+          }, 600);
+        });
+      }
+
+      // Reiniciar Partida (ocultar modal y restablecer)
+      if (btnRestartGame) {
+        btnRestartGame.addEventListener('click', function() {
+          if (modal) {
+            modal.classList.add('hidden');
+          }
+          // Simular reactivación de partida
+          const scoreDisplay = document.getElementById('hud-score-display');
+          if (scoreDisplay) {
+            scoreDisplay.textContent = '000,000';
+          }
+        });
+      }
+
+      // Volver al Vault
+      if (btnExitVault) {
+        btnExitVault.addEventListener('click', function() {
+          window.location.hash = '#biblioteca';
+        });
+      }
+
+      // Pausa rápida
+      if (btnPause) {
+        btnPause.addEventListener('click', function() {
+          if (modal) {
+            modal.classList.toggle('hidden');
+          }
+        });
+      }
+
+      // Silenciar o activar audio
+      if (btnAudio) {
+        btnAudio.addEventListener('click', function() {
+          audioEnabled = !audioEnabled;
+          if (audioEnabled) {
+            audioIcon.textContent = 'volume_up';
+            audioLabel.textContent = '[M] AUDIO';
+          } else {
+            audioIcon.textContent = 'volume_off';
+            audioLabel.textContent = '[M] SILENCIO';
+          }
+        });
+      }
+
+      // Manejo de atajos de teclado de arcade clásicos
+      window.addEventListener('keydown', function(e) {
+        if (e.key === 'p' || e.key === 'P') {
+          if (modal) modal.classList.toggle('hidden');
+        } else if (e.key === 'm' || e.key === 'M') {
+          if (btnAudio) btnAudio.click();
+        } else if (e.key === 'Escape') {
+          window.location.hash = '#biblioteca';
+        }
+      });
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest py-space-lg shadow-[0_-4px_20px_rgba(0,0,0,0.6)] relative z-20"><div class="w-full px-space-lg lg:px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md text-left"><div class="w-3 h-3 bg-secondary-container rounded-sm shadow-[0_0_8px_rgba(255,77,128,0.8)]"></div><div><p class="font-label-md text-label-md text-on-surface uppercase tracking-wider font-bold">© 1984-2025 ARCADE VAULT CORP. TODOS LOS DERECHOS RESERVADOS.</p><p class="font-label-sm text-label-sm text-tertiary-fixed tracking-widest uppercase">INSERT COIN TO CONTINUE // NODO CENTRAL: ONLINE // CANAL CH-01</p></div></div><div class="flex items-center gap-space-lg shrink-0"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-primary-fixed"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">LATENCIA: 12MS</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">POTENCIA: 100%</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">CABINAS: 48/50</span></div></div></div></footer></body></html>

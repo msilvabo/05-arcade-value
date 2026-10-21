@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.crt-overlay{pointer-events:none;background:linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.35) 50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03));background-size:100% 3px,6px 100%;}.scanline-sweep{pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,0) 50%,rgba(0,245,255,0.08) 70%,rgba(255,255,255,0));background-size:100% 30px;animation:scanlinesweep 8s linear infinite;}@keyframes scanlinesweep{0%{background-position:0 -100vh;}100%{background-position:0 100vh;}}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary": "#303300",
+          "inverse-on-surface": "#303036",
+          "surface-container-lowest": "#0e0e13",
+          "secondary-fixed": "#ffd9de",
+          "surface-container-highest": "#35343a",
+          "on-error": "#690005",
+          "on-tertiary-fixed": "#1c1d00",
+          "on-error-container": "#ffdad6",
+          "surface-bright": "#39383e",
+          "tertiary-fixed-dim": "#c7cf00",
+          "surface-tint": "#00dce5",
+          "surface-container-low": "#1b1b20",
+          "on-primary-fixed-variant": "#004f53",
+          "tertiary-container": "#dee700",
+          "on-primary": "#003739",
+          "error": "#ffb4ab",
+          "on-tertiary-container": "#616600",
+          "surface-container-high": "#2a292f",
+          "on-surface-variant": "#b9caca",
+          "on-background": "#e4e1e9",
+          "inverse-surface": "#e4e1e9",
+          "background": "#131318",
+          "outline": "#849495",
+          "surface-container": "#1f1f25",
+          "tertiary": "#fdffb5",
+          "inverse-primary": "#00696e",
+          "primary": "#e9feff",
+          "on-primary-fixed": "#002021",
+          "secondary-fixed-dim": "#ffb2bf",
+          "tertiary-fixed": "#e3ec00",
+          "surface-dim": "#131318",
+          "on-primary-container": "#006c71",
+          "on-secondary-fixed-variant": "#90003b",
+          "on-secondary-container": "#5a0022",
+          "outline-variant": "#3a494a",
+          "on-secondary": "#660028",
+          "on-tertiary-fixed-variant": "#474a00",
+          "on-secondary-fixed": "#3f0016",
+          "on-surface": "#e4e1e9",
+          "surface-variant": "#35343a",
+          "error-container": "#93000a",
+          "primary-fixed": "#63f7ff",
+          "secondary": "#ffb2bf",
+          "primary-fixed-dim": "#00dce5",
+          "primary-container": "#00f5ff",
+          "secondary-container": "#ff4d80",
+          "surface": "#131318"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-xs": "0.25rem",
+          "space-md": "1rem",
+          "space-sm": "0.5rem",
+          "gutter": "1.25rem",
+          "margin": "2rem",
+          "space-xl": "2.5rem",
+          "space-lg": "1.5rem",
+          "gutter-mobile": "0.75rem",
+          "margin-mobile": "1rem"
+        },
+        "fontFamily": {
+          "body-sm": [
+            "JetBrains Mono"
+          ],
+          "headline-lg": [
+            "Space Mono"
+          ],
+          "label-lg": [
+            "Space Mono"
+          ],
+          "headline-md": [
+            "Space Mono"
+          ],
+          "display-lg": [
+            "Space Mono"
+          ],
+          "label-md": [
+            "Space Mono"
+          ],
+          "label-sm": [
+            "Space Mono"
+          ],
+          "body-md": [
+            "JetBrains Mono"
+          ],
+          "title-sm": [
+            "Space Mono"
+          ],
+          "display-lg-mobile": [
+            "Space Mono"
+          ],
+          "body-lg": [
+            "JetBrains Mono"
+          ],
+          "headline-lg-mobile": [
+            "Space Mono"
+          ]
+        },
+        "fontSize": {
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "18px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg": [
+            "28px",
+            {
+              "lineHeight": "38px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-lg": [
+            "14px",
+            {
+              "lineHeight": "18px",
+              "letterSpacing": "0.08em",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-md": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "0.03em",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg": [
+            "40px",
+            {
+              "lineHeight": "52px",
+              "letterSpacing": "0.08em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-md": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.1em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-sm": [
+            "9px",
+            {
+              "lineHeight": "12px",
+              "letterSpacing": "0.12em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "22px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "title-sm": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg-mobile": [
+            "24px",
+            {
+              "lineHeight": "34px",
+              "letterSpacing": "0.06em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "26px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-lg-mobile": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "700"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen relative flex items-center justify-center p-space-md"><div class="fixed inset-0 crt-overlay z-50 pointer-events-none"></div><div class="fixed inset-0 scanline-sweep z-40 pointer-events-none"></div><main class="w-full max-w-lg bg-surface-container-low p-space-lg rounded shadow-[0_0_24px_rgba(0,245,255,0.25)] relative z-10"><div class="flex flex-col w-full relative">
+<!-- Interactive Ambient Circuit Details -->
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_#00f5ff]"></span>
+<span class="font-label-sm text-label-sm text-primary tracking-widest uppercase">TERMINAL://ONLINE_</span>
+</div>
+<div class="font-label-sm text-label-sm text-tertiary-fixed tracking-widest">
+      CRÉDITOS: [99] // REV. 1984
+    </div>
+</div>
+<!-- Header Card / Identification HUD -->
+<header class="text-center pt-space-xs pb-space-md">
+<div class="inline-block relative">
+<h1 class="font-display-lg text-display-lg text-primary tracking-wider uppercase drop-shadow-[0_0_16px_rgba(0,245,255,0.7)] selection:bg-secondary-container">
+        ARCADE VAULT
+      </h1>
+<span class="absolute -right-4 -top-1 font-label-sm text-label-sm text-secondary-container bg-surface-container-highest px-1 rounded shadow-[0_0_6px_#ff4d80]">
+        V2.4
+      </span>
+</div>
+<div class="mt-space-xs font-title-sm text-title-sm text-primary-fixed tracking-wide uppercase flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary-container">videogame_asset</span>
+      SISTEMA DE IDENTIFICACIÓN DE PILOTOS ARCADE
+      <span class="material-symbols-outlined text-[16px] text-primary-container">videogame_asset</span>
+</div>
+<p class="mt-space-xs font-body-sm text-body-sm text-on-surface-variant max-w-sm mx-auto tracking-normal">
+      INICIA SESIÓN PARA SINCRONIZAR TUS RÉCORDS Y COMPETIR EN EL SALÓN DE LA FAMA
+    </p>
+</header>
+<!-- Neo-Arcade Tab Selectors -->
+<div class="grid grid-cols-2 gap-space-xs p-1 bg-surface-container-lowest rounded mb-space-lg shadow-inner">
+<button class="py-space-sm px-space-md font-label-lg text-label-lg uppercase rounded transition-all duration-150 flex items-center justify-center gap-2 bg-primary-container text-on-primary font-bold shadow-[0_0_14px_rgba(0,245,255,0.6)] cursor-pointer" id="tab-login" onclick="switchAuthMode('login')" type="button">
+<span class="material-symbols-outlined text-[18px]">key</span>
+      INICIAR SESIÓN
+    </button>
+<button class="py-space-sm px-space-md font-label-lg text-label-lg uppercase rounded transition-all duration-150 flex items-center justify-center gap-2 bg-transparent text-secondary-container hover:bg-secondary-container/10 font-bold cursor-pointer" id="tab-register" onclick="switchAuthMode('register')" type="button">
+<span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+      CREAR CUENTA
+    </button>
+</div>
+<!-- Form Interface -->
+<form class="flex flex-col gap-space-md" id="vault-form" onsubmit="handleAuthSubmit(event)">
+<!-- Field: GamerTag -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-primary tracking-widest uppercase flex items-center gap-1.5" for="gamertag">
+<span class="material-symbols-outlined text-[15px] text-primary-container">sports_esports</span>
+          USUARIO / GAMERTAG
+        </label>
+<span class="font-label-sm text-label-sm text-outline-variant">ID REQUERIDO</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-[20px] pointer-events-none">badge</span>
+<input class="w-full bg-surface-container-lowest text-primary font-body-md text-body-md py-space-sm pl-10 pr-space-md rounded outline-none placeholder:text-outline-variant transition-all duration-150 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] focus:shadow-[0_0_12px_rgba(0,245,255,0.5),inset_0_0_8px_rgba(0,245,255,0.2)] focus:bg-surface-container-high" id="gamertag" name="gamertag" placeholder="ej. PixelWarrior88" required="" type="text"/>
+</div>
+</div>
+<!-- Field: Password -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-primary tracking-widest uppercase flex items-center gap-1.5" for="passkey">
+<span class="material-symbols-outlined text-[15px] text-primary-container">lock</span>
+          CONTRASEÑA
+        </label>
+<a class="font-label-sm text-label-sm text-secondary-container hover:text-secondary-fixed transition-colors underline decoration-secondary-container/40" href="#reset">
+          ¿OLVIDASTE TU CÓDIGO DE ACCESO?
+        </a>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-[20px] pointer-events-none">password</span>
+<input class="w-full bg-surface-container-lowest text-primary font-body-md text-body-md py-space-sm pl-10 pr-10 rounded outline-none placeholder:text-outline-variant transition-all duration-150 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] focus:shadow-[0_0_12px_rgba(0,245,255,0.5),inset_0_0_8px_rgba(0,245,255,0.2)] focus:bg-surface-container-high" id="passkey" name="passkey" oninput="updateSecurityMeter(this.value)" placeholder="••••••••••••" required="" type="password"/>
+<button class="absolute right-3 text-outline hover:text-primary transition-colors cursor-pointer flex items-center" onclick="togglePassVisibility()" title="Alternar visibilidad" type="button">
+<span class="material-symbols-outlined text-[18px]" id="pass-visibility-icon">visibility</span>
+</button>
+</div>
+<!-- Arcade Hardware Pixel Security Meter -->
+<div class="flex items-center gap-1.5 pt-1">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider text-[10px]">SEGURIDAD:</span>
+<div class="flex-1 grid grid-cols-4 gap-1 h-1.5 bg-surface-container-lowest p-0.5 rounded">
+<div class="rounded-sm bg-surface-container-highest transition-colors duration-200" id="sec-bar-1"></div>
+<div class="rounded-sm bg-surface-container-highest transition-colors duration-200" id="sec-bar-2"></div>
+<div class="rounded-sm bg-surface-container-highest transition-colors duration-200" id="sec-bar-3"></div>
+<div class="rounded-sm bg-surface-container-highest transition-colors duration-200" id="sec-bar-4"></div>
+</div>
+<span class="font-label-sm text-label-sm text-outline uppercase text-[10px] w-12 text-right" id="sec-text">BAJA</span>
+</div>
+</div>
+<!-- Checkbox Hardware Microswitch -->
+<div class="flex items-center justify-between pt-space-xs">
+<label class="flex items-center gap-space-sm cursor-pointer select-none group">
+<input checked="" class="sr-only peer" id="remember-me" type="checkbox"/>
+<div class="w-4 h-4 rounded bg-surface-container-lowest flex items-center justify-center transition-all peer-checked:bg-primary-container peer-checked:shadow-[0_0_8px_#00f5ff] group-hover:bg-surface-container-highest">
+<span class="material-symbols-outlined text-[14px] text-on-primary font-bold opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors tracking-wide uppercase">
+          [X] RECORDAR ESTE TERMINAL ARCADE
+        </span>
+</label>
+</div>
+<!-- Primary Trigger: ENTRAR AL VAULT -->
+<button class="w-full relative overflow-hidden py-space-md px-space-lg rounded bg-primary-container text-on-primary font-headline-md text-headline-md tracking-wider uppercase transition-all duration-100 cursor-pointer shadow-[0_0_20px_rgba(0,245,255,0.65)] hover:shadow-[0_0_30px_rgba(0,245,255,0.9)] hover:scale-[1.01] active:translate-y-0.5 active:shadow-[0_0_10px_rgba(0,245,255,0.5)] flex items-center justify-center gap-space-sm group" id="submit-button" type="submit">
+<span class="material-symbols-outlined text-on-primary text-[24px] group-hover:rotate-12 transition-transform">bolt</span>
+<span id="submit-text">ENTRAR AL VAULT</span>
+<span class="font-label-sm text-label-sm text-on-primary-fixed bg-surface-tint/30 px-1.5 py-0.5 rounded tracking-normal ml-1">
+        PRESS START
+      </span>
+</button>
+</form>
+<!-- Special Action: JUGAR COMO INVITADO -->
+<div class="mt-space-md p-space-sm bg-surface-container rounded shadow-sm hover:bg-surface-container-high transition-colors">
+<button class="w-full text-left flex items-start gap-space-sm cursor-pointer group" onclick="playAsGuest()" type="button">
+<div class="p-2 rounded bg-tertiary-container text-on-tertiary shadow-[0_0_12px_rgba(222,231,0,0.5)] flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">sports_esports</span>
+</div>
+<div class="flex-1">
+<div class="font-label-lg text-label-lg text-tertiary uppercase flex items-center justify-between group-hover:text-tertiary-fixed transition-colors">
+<span>🎮 JUGAR COMO INVITADO (SIN CUENTA)</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-snug">
+          Acceso instantáneo a todos los juegos. Tus puntuaciones se guardarán únicamente en la memoria local (localStorage) de este dispositivo.
+        </p>
+</div>
+</button>
+</div>
+<!-- Glowing Neon Cable Divider -->
+<div class="relative my-space-lg flex items-center justify-center">
+<div class="w-full h-[2px] bg-gradient-to-r from-transparent via-primary-container/40 to-transparent"></div>
+<span class="absolute px-space-sm bg-surface-container-low font-label-sm text-label-sm text-primary tracking-widest uppercase">
+      O CONÉCTATE CON TUS REDES
+    </span>
+</div>
+<!-- Social 8-Bit Gateways -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Google Auth Button -->
+<button class="py-space-sm px-space-md bg-surface-container hover:bg-surface-container-high rounded text-primary transition-all duration-150 flex items-center justify-center gap-space-xs font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-[0_0_12px_rgba(255,255,255,0.15)] cursor-pointer active:translate-y-0.5" onclick="handleSocialLogin('Google')" type="button">
+<svg class="w-4 h-4 fill-current text-secondary-container" viewbox="0 0 24 24">
+<path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"></path>
+</svg>
+      GOOGLE
+    </button>
+<!-- GitHub Auth Button -->
+<button class="py-space-sm px-space-md bg-surface-container hover:bg-surface-container-high rounded text-primary transition-all duration-150 flex items-center justify-center gap-space-xs font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-[0_0_12px_rgba(255,255,255,0.15)] cursor-pointer active:translate-y-0.5" onclick="handleSocialLogin('GitHub')" type="button">
+<svg class="w-4 h-4 fill-current text-primary-container" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path>
+</svg>
+      GITHUB
+    </button>
+</div>
+<!-- Bonus Promo Banner / Callout -->
+<div class="mt-space-lg p-space-sm rounded bg-surface-container-lowest flex items-center gap-space-sm shadow-inner">
+<div class="w-8 h-8 rounded bg-secondary-container/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-secondary-container text-[20px] animate-pulse">monetization_on</span>
+</div>
+<div class="flex-1 font-body-sm text-body-sm text-on-surface">
+      ¿No tienes una cuenta aún? 
+      <a class="font-label-sm text-label-sm text-tertiary-fixed underline tracking-wider hover:text-tertiary" href="#registro" onclick="switchAuthMode('register')">
+        REGÍSTRATE GRATIS Y RECIBE 100 CRÉDITOS VIRTUALES
+      </a>
+</div>
+</div>
+<!-- Terminal Legal Telemetry -->
+<footer class="mt-space-md pt-space-xs text-center flex flex-wrap items-center justify-center gap-x-space-md gap-y-1 font-label-sm text-label-sm text-outline">
+<a class="hover:text-primary transition-colors uppercase tracking-widest" href="#terms">
+      TÉRMINOS DEL SERVICIO ARCADE
+    </a>
+<span class="text-outline-variant">•</span>
+<a class="hover:text-primary transition-colors uppercase tracking-widest" href="#privacy">
+      POLÍTICA DE PRIVACIDAD CIBERNÉTICA
+    </a>
+</footer>
+</div>
+<script>
+  let currentAuthMode = 'login';
+
+  function switchAuthMode(mode) {
+    currentAuthMode = mode;
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const submitBtn = document.getElementById('submit-button');
+    const submitText = document.getElementById('submit-text');
+
+    if (mode === 'login') {
+      tabLogin.className = "py-space-sm px-space-md font-label-lg text-label-lg uppercase rounded transition-all duration-150 flex items-center justify-center gap-2 bg-primary-container text-on-primary font-bold shadow-[0_0_14px_rgba(0,245,255,0.6)] cursor-pointer";
+      tabRegister.className = "py-space-sm px-space-md font-label-lg text-label-lg uppercase rounded transition-all duration-150 flex items-center justify-center gap-2 bg-transparent text-secondary-container hover:bg-secondary-container/10 font-bold cursor-pointer";
+      submitText.textContent = "ENTRAR AL VAULT";
+      submitBtn.className = submitBtn.className.replace('bg-secondary-container', 'bg-primary-container');
+    } else {
+      tabRegister.className = "py-space-sm px-space-md font-label-lg text-label-lg uppercase rounded transition-all duration-150 flex items-center justify-center gap-2 bg-secondary-container text-on-secondary font-bold shadow-[0_0_14px_rgba(255,77,128,0.6)] cursor-pointer";
+      tabLogin.className = "py-space-sm px-space-md font-label-lg text-label-lg uppercase rounded transition-all duration-150 flex items-center justify-center gap-2 bg-transparent text-primary-container hover:bg-primary-container/10 font-bold cursor-pointer";
+      submitText.textContent = "REGISTRAR PILOTO + 100 CRÉDITOS";
+    }
+  }
+
+  function togglePassVisibility() {
+    const input = document.getElementById('passkey');
+    const icon = document.getElementById('pass-visibility-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  function updateSecurityMeter(pass) {
+    const bar1 = document.getElementById('sec-bar-1');
+    const bar2 = document.getElementById('sec-bar-2');
+    const bar3 = document.getElementById('sec-bar-3');
+    const bar4 = document.getElementById('sec-bar-4');
+    const text = document.getElementById('sec-text');
+
+    // Reset default
+    const resetBar = (el) => {
+      el.className = "rounded-sm bg-surface-container-highest transition-colors duration-200";
+    };
+    [bar1, bar2, bar3, bar4].forEach(resetBar);
+
+    if (!pass || pass.length === 0) {
+      text.textContent = "BAJA";
+      text.className = "font-label-sm text-label-sm text-outline uppercase text-[10px] w-12 text-right";
+      return;
+    }
+
+    let score = 0;
+    if (pass.length > 5) score++;
+    if (pass.length > 8) score++;
+    if (/[A-Z]/.test(pass) && /[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    if (score >= 1) {
+      bar1.className = "rounded-sm bg-error shadow-[0_0_6px_#ffb4ab] transition-colors duration-200";
+      text.textContent = "DÉBIL";
+      text.className = "font-label-sm text-label-sm text-error uppercase text-[10px] w-12 text-right";
+    }
+    if (score >= 2) {
+      bar2.className = "rounded-sm bg-secondary-container shadow-[0_0_6px_#ff4d80] transition-colors duration-200";
+      text.textContent = "MEDIA";
+      text.className = "font-label-sm text-label-sm text-secondary-container uppercase text-[10px] w-12 text-right";
+    }
+    if (score >= 3) {
+      bar3.className = "rounded-sm bg-tertiary-fixed shadow-[0_0_6px_#e3ec00] transition-colors duration-200";
+      text.textContent = "ALTA";
+      text.className = "font-label-sm text-label-sm text-tertiary-fixed uppercase text-[10px] w-12 text-right";
+    }
+    if (score >= 4) {
+      bar4.className = "rounded-sm bg-primary-container shadow-[0_0_6px_#00f5ff] transition-colors duration-200";
+      text.textContent = "ÓPTIMA";
+      text.className = "font-label-sm text-label-sm text-primary-container uppercase text-[10px] w-12 text-right";
+    }
+  }
+
+  function handleAuthSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-button');
+    const label = document.getElementById('submit-text');
+    const originalText = label.textContent;
+
+    label.textContent = "CONECTANDO TERMINAL...";
+    btn.classList.add('opacity-80', 'animate-pulse');
+
+    setTimeout(() => {
+      label.textContent = "¡AUTORIZADO! INICIANDO...";
+      btn.classList.remove('animate-pulse');
+      setTimeout(() => {
+        alert("¡Acceso concedido al Vault de Arcade! Bienvenido al sistema.");
+        label.textContent = originalText;
+        btn.classList.remove('opacity-80');
+      }, 500);
+    }, 1200);
+  }
+
+  function playAsGuest() {
+    localStorage.setItem('arcade_guest_mode', 'true');
+    localStorage.setItem('arcade_credits', '05');
+    const notification = document.createElement('div');
+    notification.className = "fixed bottom-4 left-1/2 -translate-x-1/2 bg-surface-bright text-primary px-space-md py-space-sm rounded font-label-md text-label-md uppercase tracking-wider shadow-[0_0_20px_rgba(0,245,255,0.8)] z-50 flex items-center gap-2";
+    notification.innerHTML = '<span class="material-symbols-outlined text-[18px] text-tertiary">check_circle</span> MODO INVITADO ACTIVADO - INICIANDO SESIÓN LOCAL';
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 2500);
+  }
+
+  function handleSocialLogin(provider) {
+    const btn = event.currentTarget;
+    btn.classList.add('opacity-50');
+    setTimeout(() => {
+      btn.classList.remove('opacity-50');
+      alert(`Redireccionando a la pasarela de autenticación de ${provider}...`);
+    }, 400);
+  }
+</script></main></body></html>
