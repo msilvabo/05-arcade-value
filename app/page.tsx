@@ -1,68 +1,124 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex flex-col min-h-screen">
+      {/* Top Navbar */}
+      <header className="av-nav">
+        <div className="logo">
+          <div className="logo-mark" />
+          <span className="logo-text neon-cyan">ARCADE VAULT</span>
+        </div>
+
+        <nav className="links">
+          <Link href="/" className="active">
+            JUEGOS
+          </Link>
+          <Link href="#salon">SALÓN DE LA FAMA</Link>
+          <Link href="#comunidad">COMUNIDAD</Link>
+        </nav>
+
+        <div className="spacer" />
+
+        <div className="coin-counter">
+          <span className="coin" />
+          <span>CREDITS: 04</span>
+        </div>
+
+        <div className="auth-btn">
+          <button type="button" className="btn magenta">
+            LOGIN
+          </button>
+        </div>
+      </header>
+
+      {/* Main Hero */}
+      <main className="av-main">
+        <section className="av-hero">
+          <h1 className="flicker">ARCADE VAULT</h1>
+          <p className="sub">
+            INSERT COIN TO PLAY <span className="blink">_</span>
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <p className="max-w-xl mx-auto mt-6 text-sm text-[var(--ink-dim)]">
+            Revive la época dorada de las máquinas recreativas. Compite por el
+            puntaje más alto en la bóveda definitiva de clásicos arcade.
+          </p>
+
+          <div className="mt-8 flex justify-center gap-4 flex-wrap">
+            <button type="button" className="btn lg pulse">
+              EXPLORAR JUEGOS
+            </button>
+            <button type="button" className="btn yellow lg">
+              VER RANKINGS
+            </button>
+          </div>
+        </section>
+
+        {/* Featured Showcase Grid */}
+        <section className="av-grid">
+          <article className="card">
+            <div className="cover cover-bricks">
+              <span className="label">ACTION</span>
+            </div>
+            <div className="meta">
+              <h2 className="title">ARKANOID NEON</h2>
+              <p className="desc">
+                Destruye bloques de neón con reflejos supersónicos.
+              </p>
+              <div className="row">
+                <div className="score-badge">
+                  <span>RECORD</span>
+                  <b>98,450</b>
+                </div>
+                <button type="button" className="btn">
+                  JUGAR
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article className="card">
+            <div className="cover cover-tetro">
+              <span className="label">PUZZLE</span>
+            </div>
+            <div className="meta">
+              <h2 className="title">TETRO VAULT</h2>
+              <p className="desc">
+                Encaja las piezas al ritmo de la música sintetizada.
+              </p>
+              <div className="row">
+                <div className="score-badge">
+                  <span>RECORD</span>
+                  <b>142,800</b>
+                </div>
+                <button type="button" className="btn magenta">
+                  JUGAR
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article className="card">
+            <div className="cover cover-invaders">
+              <span className="label">SHOOTER</span>
+            </div>
+            <div className="meta">
+              <h2 className="title">SPACE DEFENDER</h2>
+              <p className="desc">
+                Defiende el cuadrante cósmico de oleadas alienígenas.
+              </p>
+              <div className="row">
+                <div className="score-badge">
+                  <span>RECORD</span>
+                  <b>210,120</b>
+                </div>
+                <button type="button" className="btn yellow">
+                  JUGAR
+                </button>
+              </div>
+            </div>
+          </article>
+        </section>
       </main>
     </div>
   );
