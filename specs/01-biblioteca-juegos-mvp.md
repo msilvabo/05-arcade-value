@@ -1,6 +1,6 @@
 # Spec 01: Biblioteca de Juegos (MVP Visual)
 
-**Estado:** Aprobado  
+**Estado:** Implementado  
 **Fecha:** 2026-10-21  
 **Depende de:** Ninguna  
 
