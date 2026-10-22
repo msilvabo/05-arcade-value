@@ -1,10 +1,11 @@
 import { FC } from "react";
+import Link from "next/link";
 import { Game } from "@/types/game";
 import { GameArtwork } from "./GameArtwork";
 
 interface GameCardProps {
   game: Game;
-  onPlay: (game: Game) => void;
+  onPlay?: (game: Game) => void;
 }
 
 export const GameCard: FC<GameCardProps> = ({ game, onPlay }) => {
@@ -101,14 +102,14 @@ export const GameCard: FC<GameCardProps> = ({ game, onPlay }) => {
         </div>
 
         {/* Action Trigger */}
-        <button
-          className="w-full py-2 bg-primary-container/10 hover:bg-primary-container text-primary-container hover:text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded transition-all duration-150 shadow-[0_0_12px_rgba(0,245,255,0.3)] hover:shadow-[0_0_20px_rgba(0,245,255,0.7)] active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer border border-primary-container/30"
-          type="button"
-          onClick={() => onPlay(game)}
+        <Link
+          href={`/games/${game.id}`}
+          onClick={() => onPlay?.(game)}
+          className="w-full py-2 bg-primary-container/10 hover:bg-primary-container text-primary-container hover:text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded transition-all duration-150 shadow-[0_0_12px_rgba(0,245,255,0.3)] hover:shadow-[0_0_20px_rgba(0,245,255,0.7)] active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer border border-primary-container/30 text-center"
         >
           <span className="material-symbols-outlined text-[18px]">sports_esports</span>
           <span>JUGAR</span>
-        </button>
+        </Link>
       </div>
     </article>
   );

@@ -2,6 +2,7 @@
 
 import { FC } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface HeaderProps {
   credits: number;
@@ -18,6 +19,12 @@ export const Header: FC<HeaderProps> = ({
   onToggleSfx,
   onToggleMusic,
 }) => {
+  const pathname = usePathname();
+
+  const isHome = pathname === "/";
+  const isLeaderboard = pathname === "/leaderboard";
+  const isAuth = pathname === "/auth";
+
   return (
     <header className="fixed top-0 w-full z-30 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
       <div className="h-20 w-full px-space-lg lg:px-margin flex items-center justify-between gap-space-md">
@@ -42,23 +49,37 @@ export const Header: FC<HeaderProps> = ({
         <nav className="hidden xl:flex items-center gap-space-sm">
           <Link
             href="/"
-            aria-current="page"
-            className="px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider transition-all rounded bg-surface-container-high text-primary-fixed font-bold shadow-[inset_0_-2px_0_0_#00f5ff,0_0_12px_rgba(0,245,255,0.4)]"
+            aria-current={isHome ? "page" : undefined}
+            className={`px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider transition-all rounded ${
+              isHome
+                ? "bg-surface-container-high text-primary-fixed font-bold shadow-[inset_0_-2px_0_0_#00f5ff,0_0_12px_rgba(0,245,255,0.4)]"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
+            }`}
           >
             Biblioteca
           </Link>
-          <a
-            href="#records"
-            className="px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all rounded"
+          <Link
+            href="/leaderboard"
+            aria-current={isLeaderboard ? "page" : undefined}
+            className={`px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider transition-all rounded ${
+              isLeaderboard
+                ? "bg-surface-container-high text-primary-fixed font-bold shadow-[inset_0_-2px_0_0_#00f5ff,0_0_12px_rgba(0,245,255,0.4)]"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
+            }`}
           >
             Salón de la Fama
-          </a>
-          <a
-            href="#auth"
-            className="px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all rounded"
+          </Link>
+          <Link
+            href="/auth"
+            aria-current={isAuth ? "page" : undefined}
+            className={`px-space-md py-space-sm font-label-lg text-label-lg uppercase tracking-wider transition-all rounded ${
+              isAuth
+                ? "bg-surface-container-high text-primary-fixed font-bold shadow-[inset_0_-2px_0_0_#00f5ff,0_0_12px_rgba(0,245,255,0.4)]"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
+            }`}
           >
             Autenticación
-          </a>
+          </Link>
         </nav>
 
         {/* Right Controls */}
