@@ -43,3 +43,6 @@ next-env.d.ts
 # ai
 /.agents/
 /AGENTS.md
+
+#playwright
+/.playwright-mcp/
