@@ -1,6 +1,6 @@
 # Spec 04: Página Acerca de (About) y Envío de Correo con Resend
 
-**Estado:** Aprobado  
+**Estado:** Implementado  
 **Fecha:** 2026-10-22  
 **Depende de:** 01-biblioteca-juegos-mvp.md, 02-arcade-interfaces-visuales.md, 03-home-landing-y-about.md  
 
