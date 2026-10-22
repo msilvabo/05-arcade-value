@@ -1,6 +1,6 @@
 # Spec 03: Landing Page (Home) y Acerca de (About)
 
-**Estado:** Draft  
+**Estado:** Aprobado  
 **Fecha:** 2026-10-22  
 **Depende de:** 01-biblioteca-juegos-mvp.md, 02-arcade-interfaces-visuales.md  
 
