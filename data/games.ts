@@ -26,7 +26,7 @@ export const GAMES: Game[] = [
       holder: "@PIXEL_KING",
     },
     artType: "arkanoid",
-    playsCount: 15200,
+    playsCount: 52000,
   },
   {
     id: "cyber-tetris-99",
@@ -44,7 +44,7 @@ export const GAMES: Game[] = [
       holder: "@ALEXEY_K",
     },
     artType: "tetris",
-    playsCount: 42000,
+    playsCount: 48000,
   },
   {
     id: "space-invaders-galaxy",
@@ -62,7 +62,7 @@ export const GAMES: Game[] = [
       holder: "@VOID_HUNTER",
     },
     artType: "space-invaders",
-    playsCount: 28500,
+    playsCount: 41000,
   },
   {
     id: "pacman-neon-maze",
@@ -80,7 +80,7 @@ export const GAMES: Game[] = [
       holder: "@BILLY_CHAMP",
     },
     artType: "pacman",
-    playsCount: 39000,
+    playsCount: 36000,
   },
   {
     id: "chrono-snake",
@@ -98,7 +98,7 @@ export const GAMES: Game[] = [
       holder: "@RETRO_VIPER",
     },
     artType: "snake",
-    playsCount: 18400,
+    playsCount: 29000,
   },
   {
     id: "asteroids-2084",
@@ -116,6 +116,6 @@ export const GAMES: Game[] = [
       holder: "@SOLAR_ACE",
     },
     artType: "asteroids",
-    playsCount: 21300,
+    playsCount: 22000,
   },
 ];

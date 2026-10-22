@@ -9,6 +9,7 @@ import { GameCard } from "@/components/library/GameCard";
 import { GameModal } from "@/components/library/GameModal";
 import { CrtDock } from "@/components/library/CrtDock";
 import { Footer } from "@/components/library/Footer";
+import { ArcadeIcon } from "@/components/ui/ArcadeIcon";
 import { GAMES } from "@/data/games";
 import { Game, GameCategory, SortOption } from "@/types/game";
 
@@ -75,6 +76,9 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-surface font-body-md text-body-md text-on-surface overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+      {/* Full-page Ambient Vector Grid Backing */}
+      <div className="fixed inset-0 pointer-events-none opacity-10 bg-[linear-gradient(to_right,#00f5ff_1px,transparent_1px),linear-gradient(to_bottom,#00f5ff_1px,transparent_1px)] bg-[size:4rem_4rem] z-0" />
+
       {/* CRT Scanlines and Vector Overlay */}
       {crtActive && (
         <>
@@ -132,9 +136,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="py-16 px-4 text-center rounded-lg bg-surface-container-low border border-dashed border-outline-variant/40 flex flex-col items-center justify-center">
-                  <span className="material-symbols-outlined text-outline text-[48px] mb-2">
-                    search_off
-                  </span>
+                  <ArcadeIcon name="search_off" className="text-outline w-12 h-12 mb-2" />
                   <p className="font-headline-md text-headline-md text-on-surface uppercase tracking-wider">
                     NO SE ENCONTRARON JUEGOS
                   </p>

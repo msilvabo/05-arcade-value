@@ -2,6 +2,7 @@ import { FC } from "react";
 import Link from "next/link";
 import { Game } from "@/types/game";
 import { GameArtwork } from "./GameArtwork";
+import { ArcadeIcon } from "@/components/ui/ArcadeIcon";
 
 interface GameCardProps {
   game: Game;
@@ -44,12 +45,12 @@ export const GameCard: FC<GameCardProps> = ({ game, onPlay }) => {
   };
 
   return (
-    <article className="group relative flex flex-col bg-surface-container rounded-lg overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_0_25px_rgba(0,245,255,0.45)] transition-all duration-300 hover:-translate-y-1 border border-outline-variant/30">
+    <article className="group relative flex flex-col bg-surface-container rounded-lg overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.6)] hover:shadow-[0_0_25px_rgba(0,245,255,0.45)] transition-all duration-300 hover:-translate-y-1">
       {/* Top Badges & Canvas Artwork */}
       <div className="relative w-full h-48 bg-surface-container-lowest overflow-hidden flex items-center justify-center">
         <GameArtwork artType={game.artType} title={game.title} />
 
-        <div className="absolute top-2 left-2 flex items-center gap-1 bg-surface-container-lowest/80 px-2 py-0.5 rounded backdrop-blur border border-outline-variant/20">
+        <div className="absolute top-2 left-2 flex items-center gap-1 bg-surface-container-lowest/80 px-2 py-0.5 rounded backdrop-blur">
           <span className="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">
             {game.category}
           </span>
@@ -87,7 +88,7 @@ export const GameCard: FC<GameCardProps> = ({ game, onPlay }) => {
         </div>
 
         {/* Score Pill */}
-        <div className="bg-surface-container-low p-space-xs rounded flex items-center justify-between border border-outline-variant/20">
+        <div className="bg-surface-container-low p-space-xs rounded flex items-center justify-between">
           <div className="flex flex-col">
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider">
               RÉCORD MUNDIAL
@@ -105,9 +106,9 @@ export const GameCard: FC<GameCardProps> = ({ game, onPlay }) => {
         <Link
           href={`/games/${game.id}`}
           onClick={() => onPlay?.(game)}
-          className="w-full py-2 bg-primary-container/10 hover:bg-primary-container text-primary-container hover:text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded transition-all duration-150 shadow-[0_0_12px_rgba(0,245,255,0.3)] hover:shadow-[0_0_20px_rgba(0,245,255,0.7)] active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer border border-primary-container/30 text-center"
+          className="w-full py-2 bg-primary-container/10 hover:bg-primary-container text-primary-container hover:text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded transition-all duration-150 shadow-[0_0_12px_rgba(0,245,255,0.3)] hover:shadow-[0_0_20px_rgba(0,245,255,0.7)] active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer text-center"
         >
-          <span className="material-symbols-outlined text-[18px]">sports_esports</span>
+          <ArcadeIcon name="sports_esports" className="w-[18px] h-[18px]" />
           <span>JUGAR</span>
         </Link>
       </div>

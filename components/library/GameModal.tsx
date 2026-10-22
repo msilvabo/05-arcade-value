@@ -3,6 +3,7 @@
 import { FC, useEffect } from "react";
 import { Game } from "@/types/game";
 import { GameArtwork } from "./GameArtwork";
+import { ArcadeIcon } from "@/components/ui/ArcadeIcon";
 
 interface GameModalProps {
   game: Game | null;
@@ -50,7 +51,7 @@ export const GameModal: FC<GameModalProps> = ({ game, onClose, credits }) => {
             className="w-7 h-7 flex items-center justify-center rounded bg-surface-container-high hover:bg-surface-bright text-on-surface hover:text-white transition-colors cursor-pointer"
             aria-label="Cerrar modal"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <ArcadeIcon name="close" className="w-[18px] h-[18px]" />
           </button>
         </div>
 

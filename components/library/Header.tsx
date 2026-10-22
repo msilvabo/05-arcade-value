@@ -3,6 +3,8 @@
 import { FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ArcadeLogo } from "@/components/ui/ArcadeLogo";
+import { ArcadeIcon } from "@/components/ui/ArcadeIcon";
 
 interface HeaderProps {
   credits: number;
@@ -30,11 +32,10 @@ export const Header: FC<HeaderProps> = ({
       <div className="h-20 w-full px-space-lg lg:px-margin flex items-center justify-between gap-space-md">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-space-md shrink-0 group">
-          <div className="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center border border-primary-container/50 shadow-[0_0_12px_rgba(0,245,255,0.7)] group-hover:scale-105 transition-transform">
-            <span className="material-symbols-outlined text-primary-container text-[20px]">
-              videogame_asset
-            </span>
-          </div>
+          <ArcadeLogo className="h-8 w-auto object-contain filter drop-shadow-[0_0_8px_rgba(0,245,255,0.8)]" />
+          <span className="text-primary-container font-mono text-base font-bold select-none tracking-widest hidden sm:inline">
+            ::
+          </span>
           <div className="flex flex-col">
             <span className="font-title-sm text-title-sm uppercase tracking-widest text-primary drop-shadow-[0_0_6px_rgba(0,245,255,0.7)]">
               ARCADE VAULT
@@ -130,7 +131,7 @@ export const Header: FC<HeaderProps> = ({
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,77,128,0.7)]">
-              <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
+              <ArcadeIcon name="person" className="text-on-primary w-[18px] h-[18px]" />
             </div>
           </div>
         </div>

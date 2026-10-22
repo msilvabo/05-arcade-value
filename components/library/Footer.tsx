@@ -2,7 +2,7 @@ import { FC } from "react";
 
 export const Footer: FC = () => {
   return (
-    <footer className="w-full bg-surface-container-lowest py-space-lg shadow-[0_-4px_20px_rgba(0,0,0,0.6)] relative z-20 border-t border-outline-variant/30">
+    <footer className="w-full bg-surface-container-lowest py-space-lg shadow-[0_-4px_20px_rgba(0,0,0,0.6)] relative z-20">
       <div className="w-full px-space-lg lg:px-margin flex flex-col md:flex-row items-center justify-between gap-space-md">
         <div className="flex items-center gap-space-md text-left">
           <div className="w-3 h-3 bg-secondary-container rounded-sm shadow-[0_0_8px_rgba(255,77,128,0.8)] shrink-0" />

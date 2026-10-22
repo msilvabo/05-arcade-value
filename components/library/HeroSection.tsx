@@ -1,6 +1,7 @@
 "use client";
 
 import { FC } from "react";
+import { ArcadeIcon } from "@/components/ui/ArcadeIcon";
 
 interface HeroSectionProps {
   onInsertCredit: () => void;
@@ -21,7 +22,7 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
       <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center">
         {/* Live Server Telemetry */}
-        <div className="flex flex-wrap items-center justify-center gap-space-sm bg-surface-container-low px-space-md py-1 rounded-full shadow-[0_0_15px_rgba(0,245,255,0.15)] mb-space-md border border-outline-variant/30">
+        <div className="flex flex-wrap items-center justify-center gap-space-sm bg-surface-container-low px-space-md py-1 rounded-full shadow-[0_0_15px_rgba(0,245,255,0.15)] mb-space-md">
           <span className="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse" />
           <span className="font-label-md text-label-md text-primary tracking-widest uppercase">
             1,248 JUGADORES EN LÍNEA
@@ -54,23 +55,21 @@ export const HeroSection: FC<HeroSectionProps> = ({
 
         <div className="flex flex-wrap items-center justify-center gap-space-md">
           <button
-            className="group relative px-space-xl py-space-sm bg-primary-container/10 hover:bg-primary-container text-primary-container hover:text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded transition-all duration-150 shadow-[0_0_20px_rgba(0,245,255,0.4)] hover:shadow-[0_0_30px_rgba(0,245,255,0.9)] active:translate-y-0.5 flex items-center gap-space-sm cursor-pointer border border-primary-container/40"
+            className="group relative px-space-xl py-space-sm bg-primary-container/10 hover:bg-primary-container text-primary-container hover:text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded transition-all duration-150 shadow-[0_0_20px_rgba(0,245,255,0.4)] hover:shadow-[0_0_30px_rgba(0,245,255,0.9)] active:translate-y-0.5 flex items-center gap-space-sm cursor-pointer"
             id="insertCoinBtn"
             type="button"
             onClick={onInsertCredit}
           >
-            <span className="material-symbols-outlined text-[24px]">toll</span>
+            <ArcadeIcon name="toll" className="w-6 h-6 text-primary-container group-hover:text-on-primary transition-colors" />
             <span>INSERTAR CRÉDITO (+1)</span>
           </button>
 
           <button
-            className="px-space-lg py-space-sm bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-lg text-label-lg uppercase tracking-wider rounded transition-all shadow-md flex items-center gap-2 cursor-pointer border border-outline-variant/30"
+            className="px-space-lg py-space-sm bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-lg text-label-lg uppercase tracking-wider rounded transition-all shadow-md flex items-center gap-2 cursor-pointer"
             type="button"
             onClick={onOpenLeaderboard}
           >
-            <span className="material-symbols-outlined text-[20px] text-tertiary-fixed">
-              military_tech
-            </span>
+            <ArcadeIcon name="military_tech" className="w-5 h-5 text-tertiary-fixed" />
             <span>SALÓN DE RÉCORDS</span>
           </button>
         </div>

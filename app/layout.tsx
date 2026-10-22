@@ -33,18 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${pressStart2P.variable} ${jetbrainsMono.variable} ${spaceMono.variable} h-full antialiased dark`}
     >
-      <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        />
-      </head>
       <body className="min-h-full flex flex-col bg-surface text-on-surface">
-        {/* Fondo: gradientes, scanlines y rejilla en perspectiva retro */}
-        <div className="av-bg" aria-hidden="true" />
-        <div className="av-noise" aria-hidden="true" />
-
         {/* Contenedor principal de la app */}
         <div id="root" className="relative z-10 flex flex-col min-h-screen">
           {children}
