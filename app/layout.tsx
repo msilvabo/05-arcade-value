@@ -33,11 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${pressStart2P.variable} ${jetbrainsMono.variable} ${spaceMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col">
-        {/* Fondo: gradientes, scanlines y rejilla en perspectiva retro */}
-        <div className="av-bg" aria-hidden="true" />
-        <div className="av-noise" aria-hidden="true" />
-
+      <body className="min-h-full flex flex-col bg-surface text-on-surface">
         {/* Contenedor principal de la app */}
         <div id="root" className="relative z-10 flex flex-col min-h-screen">
           {children}

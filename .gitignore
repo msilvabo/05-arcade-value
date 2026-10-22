@@ -44,5 +44,8 @@ next-env.d.ts
 /.agents/
 /AGENTS.md
 
+#playwright
+/.playwright-mcp/
+
 #playwrigt
 /.playwright-mcp/
