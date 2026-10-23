@@ -1,35 +1,66 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { GameRoomHud } from "@/components/game-room/GameRoomHud";
 import { CrtCabinet } from "@/components/game-room/CrtCabinet";
 import { ArkanoidPresentation } from "@/components/game-room/ArkanoidPresentation";
+import { AsteroidsGame } from "@/components/game-room/AsteroidsGame";
 import { GameRoomOverlay } from "@/components/game-room/GameRoomOverlay";
+import { getHighScore, saveGameScore } from "@/lib/scores";
 
 interface PlayRoomClientProps {
   gameId: string;
 }
 
 export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
-  const [score, setScore] = useState<number>(48250);
-  const [highScore] = useState<number>(142500);
+  const isAsteroids = gameId === "asteroids-2084" || gameId === "asteroids";
+
+  const [score, setScore] = useState<number>(0);
+  const [highScore, setHighScore] = useState<number>(() =>
+    getHighScore(gameId, isAsteroids ? 231800 : 142500)
+  );
   const [lives, setLives] = useState<number>(3);
+  const [level, setLevel] = useState<number>(1);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [audioOn, setAudioOn] = useState<boolean>(true);
   const [scanlinesActive, setScanlinesActive] = useState<boolean>(true);
   const [curvatureActive, setCurvatureActive] = useState<boolean>(true);
+  const [restartSignal, setRestartSignal] = useState<number>(0);
+
+  useEffect(() => {
+    const saved = getHighScore(gameId, isAsteroids ? 231800 : 142500);
+    setHighScore(saved);
+  }, [gameId, isAsteroids]);
 
   const handleScoreIncrement = (pts: number) => {
     setScore((prev) => prev + pts);
   };
 
+  const handleScoreChange = (newScore: number) => {
+    setScore(newScore);
+  };
+
+  const handleGameOver = async (finalScore: number) => {
+    setIsGameOver(true);
+    const result = await saveGameScore(gameId, finalScore);
+    if (result.isNewRecord) {
+      setHighScore(result.highScore);
+    }
+  };
+
   const handleRestart = () => {
     setScore(0);
     setLives(3);
+    setLevel(1);
     setIsGameOver(false);
     setIsPaused(false);
+    setRestartSignal((prev) => prev + 1);
   };
+
+  const levelLabel = isAsteroids
+    ? `NV. ${String(level).padStart(2, "0")}: CINTURÓN VECTOR`
+    : "NV. 04: MATRIZ NEÓN";
 
   return (
     <div className="flex flex-col min-h-screen bg-surface select-none">
@@ -38,7 +69,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
         score={score}
         highScore={highScore}
         lives={lives}
-        level="NV. 04: MATRIZ NEÓN"
+        level={levelLabel}
         isPaused={isPaused}
         onTogglePause={() => setIsPaused((prev) => !prev)}
         audioOn={audioOn}
@@ -58,10 +89,21 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
             scanlinesActive={scanlinesActive}
             curvatureActive={curvatureActive}
           >
-            <ArkanoidPresentation
-              isPaused={isPaused || isGameOver}
-              onScoreIncrement={handleScoreIncrement}
-            />
+            {isAsteroids ? (
+              <AsteroidsGame
+                isPaused={isPaused || isGameOver}
+                onScoreChange={handleScoreChange}
+                onLivesChange={(l) => setLives(l)}
+                onLevelChange={(lvl) => setLevel(lvl)}
+                onGameOver={handleGameOver}
+                restartSignal={restartSignal}
+              />
+            ) : (
+              <ArkanoidPresentation
+                isPaused={isPaused || isGameOver}
+                onScoreIncrement={handleScoreIncrement}
+              />
+            )}
 
             {/* Modales de Pausa y Game Over */}
             <GameRoomOverlay
@@ -111,49 +153,91 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
             </span>
             <button
               type="button"
-              onClick={() => setIsGameOver((prev) => !prev)}
+              onClick={() => {
+                if (isGameOver) {
+                  handleRestart();
+                } else {
+                  handleGameOver(score);
+                }
+              }}
               className={`px-2.5 py-1 rounded text-[11px] font-label-sm uppercase transition-all cursor-pointer border ${
                 isGameOver
                   ? "bg-secondary-container text-white border-secondary-container shadow-[0_0_8px_rgba(255,77,128,0.7)]"
                   : "bg-surface-container-highest text-secondary-container border-secondary-container/30 hover:bg-surface-bright"
               }`}
             >
-              {isGameOver ? "REANUDAR PARTIDA" : "PROBAR GAME OVER"}
+              {isGameOver ? "REANUDAR PARTIDA" : "FORZAR GAME OVER"}
             </button>
           </div>
         </div>
 
         {/* Guía de Control para el Jugador */}
         <div className="w-full max-w-4xl mt-space-md grid grid-cols-1 md:grid-cols-3 gap-space-sm text-center">
-          <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-            <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-              arrow_back
-            </span>
-            <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-              arrow_forward
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-              FLECHAS / RATÓN: MOVER VAUS
-            </span>
-          </div>
+          {isAsteroids ? (
+            <>
+              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
+                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
+                  arrow_back
+                </span>
+                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
+                  arrow_forward
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                  FLECHAS / A-D: ROTAR NAVE
+                </span>
+              </div>
 
-          <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-            <span className="px-2 py-0.5 bg-surface-container-high text-tertiary font-label-sm text-label-sm rounded uppercase font-bold">
-              ESPACIO
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-              LANZAR BOLA / LÁSER
-            </span>
-          </div>
+              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
+                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
+                  arrow_upward
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                  FLECHA ARRIBA / W: PROPULSAR
+                </span>
+              </div>
 
-          <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-            <span className="px-2 py-0.5 bg-surface-container-high text-secondary font-label-sm text-label-sm rounded uppercase font-bold">
-              P
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-              PAUSAR SIMULACIÓN
-            </span>
-          </div>
+              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
+                <span className="px-2 py-0.5 bg-surface-container-high text-tertiary font-label-sm text-label-sm rounded uppercase font-bold">
+                  ESPACIO
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                  DISPARAR CAÑONES
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
+                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
+                  arrow_back
+                </span>
+                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
+                  arrow_forward
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                  FLECHAS / RATÓN: MOVER VAUS
+                </span>
+              </div>
+
+              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
+                <span className="px-2 py-0.5 bg-surface-container-high text-tertiary font-label-sm text-label-sm rounded uppercase font-bold">
+                  ESPACIO
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                  LANZAR BOLA / LÁSER
+                </span>
+              </div>
+
+              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
+                <span className="px-2 py-0.5 bg-surface-container-high text-secondary font-label-sm text-label-sm rounded uppercase font-bold">
+                  P
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                  PAUSAR SIMULACIÓN
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </main>
 
