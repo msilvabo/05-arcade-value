@@ -14,8 +14,14 @@ export const ArkanoidPresentation: FC<ArkanoidPresentationProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [paddleX, setPaddleX] = useState<number>(50); // porcentaje 0 a 100
   const [ballPos, setBallPos] = useState<{ x: number; y: number }>({ x: 50, y: 70 });
-  const [ballVel, setBallVel] = useState<{ dx: number; dy: number }>({ dx: 0.45, dy: -0.6 });
+  const ballPosRef = useRef<{ x: number; y: number }>({ x: 50, y: 70 });
+  const ballVelRef = useRef<{ dx: number; dy: number }>({ dx: 0.45, dy: -0.6 });
+  const paddleXRef = useRef<number>(50);
   const [hitEffect, setHitEffect] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    paddleXRef.current = paddleX;
+  }, [paddleX]);
 
   // Manejo de movimiento del mouse sobre el área de juego
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -45,64 +51,61 @@ export const ArkanoidPresentation: FC<ArkanoidPresentationProps> = ({
     if (isPaused) return;
 
     const interval = setInterval(() => {
-      setBallPos((prev) => {
-        let newX = prev.x + ballVel.dx;
-        let newY = prev.y + ballVel.dy;
-        let newDx = ballVel.dx;
-        let newDy = ballVel.dy;
+      let newX = ballPosRef.current.x + ballVelRef.current.dx;
+      let newY = ballPosRef.current.y + ballVelRef.current.dy;
+      let newDx = ballVelRef.current.dx;
+      let newDy = ballVelRef.current.dy;
+      const currentPaddleX = paddleXRef.current;
 
-        // Rebote en paredes laterales (5% a 95%)
-        if (newX <= 5 || newX >= 95) {
-          newDx = -newDx;
-          newX = Math.max(5, Math.min(95, newX));
+      // Rebote en paredes laterales (5% a 95%)
+      if (newX <= 5 || newX >= 95) {
+        newDx = -newDx;
+        newX = Math.max(5, Math.min(95, newX));
+      }
+
+      // Rebote en techo (5%)
+      if (newY <= 8) {
+        newDy = Math.abs(newDy);
+        newY = 8;
+        setHitEffect({ x: newX, y: 8 });
+        setTimeout(() => setHitEffect(null), 300);
+        onScoreIncrement(100);
+      }
+
+      // Rebote en bloques superiores (y entre 20% y 40%)
+      if (newY >= 20 && newY <= 38 && Math.random() < 0.1) {
+        newDy = -newDy;
+        setHitEffect({ x: newX, y: newY });
+        setTimeout(() => setHitEffect(null), 300);
+        onScoreIncrement(250);
+      }
+
+      // Rebote en la paleta Vaus (cerca del 88%)
+      if (newY >= 88 && newY <= 92) {
+        const diff = Math.abs(newX - currentPaddleX);
+        if (diff < 16) {
+          newDy = -Math.abs(newDy);
+          newY = 87;
+          newDx = (newX - currentPaddleX) * 0.08 || (newDx > 0 ? 0.45 : -0.45);
+          setHitEffect({ x: newX, y: 88 });
+          setTimeout(() => setHitEffect(null), 250);
         }
+      }
 
-        // Rebote en techo (5%)
-        if (newY <= 8) {
-          newDy = Math.abs(newDy);
-          newY = 8;
-          setHitEffect({ x: newX, y: 8 });
-          setTimeout(() => setHitEffect(null), 300);
-          onScoreIncrement(100);
-        }
+      // Si cae por debajo, reiniciar suavemente
+      if (newY >= 98) {
+        newY = 65;
+        newX = currentPaddleX;
+        newDy = -0.6;
+      }
 
-        // Rebote en bloques superiores (y entre 20% y 40%)
-        if (newY >= 20 && newY <= 38 && Math.random() < 0.1) {
-          newDy = -newDy;
-          setHitEffect({ x: newX, y: newY });
-          setTimeout(() => setHitEffect(null), 300);
-          onScoreIncrement(250);
-        }
-
-        // Rebote en la paleta Vaus (cerca del 88%)
-        if (newY >= 88 && newY <= 92) {
-          const diff = Math.abs(newX - paddleX);
-          if (diff < 16) {
-            newDy = -Math.abs(newDy);
-            newY = 87;
-            newDx = (newX - paddleX) * 0.08 || (newDx > 0 ? 0.45 : -0.45);
-            setHitEffect({ x: newX, y: 88 });
-            setTimeout(() => setHitEffect(null), 250);
-          }
-        }
-
-        // Si cae por debajo, reiniciar suavemente
-        if (newY >= 98) {
-          newY = 65;
-          newX = paddleX;
-          newDy = -0.6;
-        }
-
-        if (newDx !== ballVel.dx || newDy !== ballVel.dy) {
-          setBallVel({ dx: newDx, dy: newDy });
-        }
-
-        return { x: newX, y: newY };
-      });
+      ballVelRef.current = { dx: newDx, dy: newDy };
+      ballPosRef.current = { x: newX, y: newY };
+      setBallPos({ x: newX, y: newY });
     }, 24);
 
     return () => clearInterval(interval);
-  }, [isPaused, ballVel, paddleX, onScoreIncrement]);
+  }, [isPaused, onScoreIncrement]);
 
   return (
     <div
