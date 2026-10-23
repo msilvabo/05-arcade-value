@@ -1,24 +1,48 @@
 import { createClient } from "@/lib/supabase/client";
+import { findGameModule, getGameConfig } from "@/app/games/_lib/registry";
+import { LeaderboardEntry, LeaderboardPeriod } from "@/types/leaderboard";
+import { LEADERBOARD_ENTRIES } from "@/data/leaderboard";
 
 export interface GameScorePayload {
   gameId: string;
   score: number;
+  playerName?: string;
   userId?: string | null;
-  createdAt?: string;
+  accuracy?: string;
+  combo?: string;
 }
 
 export interface HighScoreResult {
   highScore: number;
   isNewRecord: boolean;
   persistedToSupabase: boolean;
+  error?: string;
+}
+
+export interface SaveScoreParams {
+  gameId: string;
+  score: number;
+  playerName: string;
+  userId?: string | null;
+  accuracy?: string;
+  combo?: string;
 }
 
 const getStorageKey = (gameId: string) => `arcade_vault_highscore_${gameId}`;
 
+export function toCanonicalGameId(idOrAlias: string): string {
+  if (!idOrAlias) return "asteroids-2084";
+  const mod = findGameModule(idOrAlias);
+  return mod?.id || idOrAlias;
+}
+
 export function getHighScore(gameId: string, fallbackDefault = 0): number {
   if (typeof window === "undefined") return fallbackDefault;
   try {
-    const raw = localStorage.getItem(getStorageKey(gameId));
+    const canonical = toCanonicalGameId(gameId);
+    const raw =
+      localStorage.getItem(getStorageKey(canonical)) ||
+      localStorage.getItem(getStorageKey(gameId));
     if (!raw) return fallbackDefault;
     const parsed = parseInt(raw, 10);
     return isNaN(parsed) ? fallbackDefault : parsed;
@@ -27,58 +51,234 @@ export function getHighScore(gameId: string, fallbackDefault = 0): number {
   }
 }
 
+/**
+ * Guarda el récord en localStorage y opcionalmente en Supabase si se proveen datos básicos.
+ */
 export async function saveGameScore(
   gameId: string,
   score: number
 ): Promise<HighScoreResult> {
+  const canonicalId = toCanonicalGameId(gameId);
   let isNewRecord = false;
-  let currentHighScore = getHighScore(gameId, 0);
+  let currentHighScore = getHighScore(canonicalId, 0);
 
   if (score > currentHighScore) {
     currentHighScore = score;
     isNewRecord = true;
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(getStorageKey(gameId), score.toString());
+        localStorage.setItem(getStorageKey(canonicalId), score.toString());
       } catch (err) {
         console.warn("Error guardando High Score en localStorage:", err);
       }
     }
   }
 
-  let persistedToSupabase = false;
-
-  // Intentar sincronización con Supabase si está disponible en el cliente
-  if (
-    typeof window !== "undefined" &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { error } = await supabase.from("game_scores").insert({
-          user_id: user.id,
-          game_id: gameId,
-          score: score,
-        });
-
-        if (!error) {
-          persistedToSupabase = true;
-        }
-      }
-    } catch {
-      // Degradar silenciosamente a localStorage
-    }
-  }
-
   return {
     highScore: currentHighScore,
     isNewRecord,
-    persistedToSupabase,
+    persistedToSupabase: false,
   };
+}
+
+/**
+ * Registra una puntuación con nombre/alias en la tabla `scores` de Supabase
+ */
+export async function saveScoreRecord({
+  gameId,
+  score,
+  playerName,
+  userId,
+  accuracy = "100%",
+  combo = "x1",
+}: SaveScoreParams): Promise<{
+  success: boolean;
+  isNewRecord: boolean;
+  error?: string;
+}> {
+  const canonicalId = toCanonicalGameId(gameId);
+
+  // Actualizar High Score local
+  const currentHigh = getHighScore(canonicalId, 0);
+  const isNewRecord = score > currentHigh;
+  if (isNewRecord && typeof window !== "undefined") {
+    try {
+      localStorage.setItem(getStorageKey(canonicalId), score.toString());
+    } catch {
+      // Ignorar fallo de localStorage
+    }
+  }
+
+  // Guardar en Supabase tabla `scores`
+  try {
+    const supabase = createClient();
+
+    // Si no se proporcionó userId, intentar obtener el usuario logueado actual
+    let effectiveUserId = userId || null;
+    let effectivePlayerName = playerName.trim() || "PILOTO_VAULT";
+
+    if (!effectiveUserId) {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          effectiveUserId = user.id;
+          if (!playerName.trim()) {
+            effectivePlayerName =
+              user.user_metadata?.gamer_tag ||
+              user.email?.split("@")[0].toUpperCase() ||
+              "PILOTO_VAULT";
+          }
+        }
+      } catch {
+        // Modo anónimo/offline
+      }
+    }
+
+    const { error } = await supabase.from("scores").insert({
+      game_id: canonicalId,
+      score: score,
+      player_name: effectivePlayerName.toUpperCase(),
+      user_id: effectiveUserId,
+      accuracy,
+      combo,
+    });
+
+    if (error) {
+      console.error("Error insertando score en Supabase:", error);
+      return { success: false, isNewRecord, error: error.message };
+    }
+
+    return { success: true, isNewRecord };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Error de red";
+    console.error("Error de conexión guardando score:", err);
+    return { success: false, isNewRecord, error: msg };
+  }
+}
+
+function formatScoreDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    return d
+      .toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .toUpperCase();
+  } catch {
+    return "OCT 2026";
+  }
+}
+
+function getBadgeForRank(
+  rank: number
+): "CHAMPION" | "MASTER" | "VETERAN" | "ROOKIE" {
+  if (rank === 1) return "CHAMPION";
+  if (rank === 2) return "MASTER";
+  if (rank === 3) return "VETERAN";
+  return "ROOKIE";
+}
+
+/**
+ * Consulta la tabla `scores` en Supabase unida con perfiles y devuelve la lista formateada para el Leaderboard.
+ */
+export async function fetchLeaderboardScores(
+  gameId?: string,
+  period: LeaderboardPeriod = "all-time"
+): Promise<LeaderboardEntry[]> {
+  try {
+    const supabase = createClient();
+    const canonicalId =
+      gameId && gameId !== "all" ? toCanonicalGameId(gameId) : null;
+
+    let query = supabase
+      .from("scores")
+      .select(
+        `
+        id,
+        game_id,
+        score,
+        accuracy,
+        combo,
+        created_at,
+        player_name,
+        profiles (
+          gamer_tag,
+          avatar_url
+        )
+      `
+      )
+      .order("score", { ascending: false })
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    if (canonicalId) {
+      query = query.eq("game_id", canonicalId);
+    }
+
+    if (period === "weekly") {
+      const weekAgo = new Date(
+        Date.now() - 7 * 24 * 60 * 60 * 1000
+      ).toISOString();
+      query = query.gte("created_at", weekAgo);
+    } else if (period === "monthly") {
+      const monthAgo = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000
+      ).toISOString();
+      query = query.gte("created_at", monthAgo);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.warn("Fallo al leer scores de Supabase:", error);
+      return getFallbackEntries(canonicalId);
+    }
+
+    if (!data || data.length === 0) {
+      return getFallbackEntries(canonicalId);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.map((row: any, index: number) => {
+      const rank = index + 1;
+      const gameCfg = getGameConfig(row.game_id);
+      const gamerTag =
+        row.player_name || row.profiles?.gamer_tag || "PILOTO_VAULT";
+      const avatar = row.profiles?.avatar_url || "";
+
+      return {
+        rank,
+        gamerTag,
+        avatar,
+        score: row.score,
+        formattedScore: row.score.toLocaleString(),
+        gameId: row.game_id,
+        gameTitle: gameCfg.title,
+        badge: getBadgeForRank(rank),
+        date: formatScoreDate(row.created_at),
+        accuracy: row.accuracy || "100%",
+        combo: row.combo || "x1",
+      };
+    });
+  } catch (err) {
+    console.warn("Error de conexión al cargar leaderboard:", err);
+    return getFallbackEntries(gameId ? toCanonicalGameId(gameId) : null);
+  }
+}
+
+function getFallbackEntries(canonicalId: string | null): LeaderboardEntry[] {
+  if (!canonicalId) return LEADERBOARD_ENTRIES;
+
+  const filtered = LEADERBOARD_ENTRIES.filter((e) => {
+    return (
+      toCanonicalGameId(e.gameId) === canonicalId ||
+      e.gameId.toLowerCase().includes(canonicalId.toLowerCase())
+    );
+  });
+
+  return filtered.length > 0 ? filtered : LEADERBOARD_ENTRIES;
 }

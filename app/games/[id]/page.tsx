@@ -1,11 +1,10 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { LauncherClient } from "@/components/launcher/LauncherClient";
-import { GAME_DETAILS } from "@/data/game-details";
-import { GAMES } from "@/data/games";
+import { getGameConfig, getAvailableGameIds } from "@/app/games/_lib/registry";
 
 export function generateStaticParams() {
-  return GAMES.map((g) => ({ id: g.id }));
+  return getAvailableGameIds().map((id) => ({ id }));
 }
 
 interface GameLauncherPageProps {
@@ -16,7 +15,7 @@ export async function generateMetadata({
   params,
 }: GameLauncherPageProps): Promise<Metadata> {
   const { id } = await params;
-  const game = GAME_DETAILS[id] || GAME_DETAILS["arkanoid"];
+  const game = getGameConfig(id);
   return {
     title: `${game.title}: ${game.subtitle} // Arcade Vault`,
     description: game.missionLog.story,
@@ -25,7 +24,7 @@ export async function generateMetadata({
 
 async function LauncherRegion({ params }: GameLauncherPageProps) {
   const { id } = await params;
-  const game = GAME_DETAILS[id] || GAME_DETAILS["arkanoid"];
+  const game = getGameConfig(id);
   return <LauncherClient game={game} />;
 }
 

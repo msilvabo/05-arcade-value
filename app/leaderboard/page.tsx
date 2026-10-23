@@ -1,17 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/library/Header";
 import { Footer } from "@/components/library/Footer";
 import { LeaderboardPodium } from "@/components/leaderboard/LeaderboardPodium";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
+import { fetchLeaderboardScores } from "@/lib/scores";
+import { getGameConfig } from "@/app/games/_lib/registry";
+import { LeaderboardEntry, LeaderboardPeriod } from "@/types/leaderboard";
 import { LEADERBOARD_ENTRIES } from "@/data/leaderboard";
 
 export default function LeaderboardPage() {
   const [credits] = useState<number>(4);
   const [sfx, setSfx] = useState<boolean>(true);
   const [music, setMusic] = useState<boolean>(true);
-  const [selectedGame, setSelectedGame] = useState<string>("arkanoid");
+  const [selectedGame, setSelectedGame] = useState<string>("asteroids-2084");
+  const [period, setPeriod] = useState<LeaderboardPeriod>("all-time");
+  const [entries, setEntries] =
+    useState<LeaderboardEntry[]>(LEADERBOARD_ENTRIES);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Cargar puntuaciones de Supabase cuando cambia el juego o el período
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const data = await fetchLeaderboardScores(selectedGame, period);
+        if (active) {
+          setEntries(data);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.warn("Error cargando scores:", err);
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedGame, period]);
+
+  const activeGameConfig = getGameConfig(selectedGame);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -32,16 +67,22 @@ export default function LeaderboardPage() {
             <div className="flex items-center gap-space-sm">
               <span className="w-2 h-2 rounded-full bg-tertiary-fixed animate-ping"></span>
               <span className="text-tertiary-fixed font-bold tracking-widest">
-                [SISTEMA TOP-TIER ARCHIVE]
+                [SISTEMA TOP-TIER ARCHIVE // SUPABASE]
               </span>
-              <span className="hidden sm:inline text-outline-variant">{"//"}</span>
+              <span className="hidden sm:inline text-outline-variant">
+                {"//"}
+              </span>
               <span className="hidden sm:inline">
-                ACTUALIZACIÓN EN TIEMPO REAL: CANAL GL-09
+                TABLA OFICIAL DE PUNTUACIONES
               </span>
             </div>
             <div className="flex items-center gap-space-md">
-              <span className="text-primary-fixed">SERVIDORES DE PUNTUACIÓN: ÓPTIMO</span>
-              <span className="text-secondary-fixed">PARTIDAS HOY: 18,492</span>
+              <span className="text-primary-fixed">
+                ESTADO DE BASE DE DATOS: ONLINE
+              </span>
+              <span className="text-secondary-fixed">
+                CABINA: {activeGameConfig.title}
+              </span>
             </div>
           </div>
 
@@ -70,36 +111,59 @@ export default function LeaderboardPage() {
             {/* Terminal Metadata Bar */}
             <div className="mt-space-md flex flex-wrap justify-center items-center gap-space-md bg-surface-container-lowest px-space-lg py-space-xs rounded shadow-[0_0_12px_rgba(0,0,0,0.6)] border border-outline-variant/30">
               <div className="flex items-center gap-space-xs">
-                <span className="font-label-sm text-label-sm text-outline">TEMPORADA:</span>
+                <span className="font-label-sm text-label-sm text-outline">
+                  TEMPORADA:
+                </span>
                 <span className="font-label-sm text-label-sm text-tertiary-fixed font-bold">
                   OCTUBRE &apos;84 {"//"} FASE IV
                 </span>
               </div>
-              <span className="text-outline-variant font-label-sm text-label-sm">|</span>
+              <span className="text-outline-variant font-label-sm text-label-sm">
+                |
+              </span>
               <div className="flex items-center gap-space-xs">
-                <span className="font-label-sm text-label-sm text-outline">CABINAS CONECTADAS:</span>
+                <span className="font-label-sm text-label-sm text-outline">
+                  CABINA:
+                </span>
                 <span className="font-label-sm text-label-sm text-primary-fixed font-bold">
-                  3,891 UNIDADES
+                  {activeGameConfig.cabinetNumber} •{" "}
+                  {activeGameConfig.developer}
                 </span>
               </div>
-              <span className="text-outline-variant font-label-sm text-label-sm hidden md:inline">|</span>
+              <span className="text-outline-variant font-label-sm text-label-sm hidden md:inline">
+                |
+              </span>
               <div className="hidden md:flex items-center gap-space-xs">
-                <span className="font-label-sm text-label-sm text-outline">VERIFICACIÓN:</span>
+                <span className="font-label-sm text-label-sm text-outline">
+                  VERIFICACIÓN:
+                </span>
                 <span className="font-label-sm text-label-sm text-on-surface font-bold">
-                  ROM ANTI-CHEAT v4.2
+                  SUPABASE CLOUD RLS
                 </span>
               </div>
             </div>
           </div>
 
           {/* Podio Neón Top 3 */}
-          <LeaderboardPodium entries={LEADERBOARD_ENTRIES} />
+          <LeaderboardPodium
+            entries={entries}
+            gameTitle={activeGameConfig.title}
+          />
 
           {/* Selector de cartucho y Tabla Top 10 */}
           <LeaderboardTable
-            entries={LEADERBOARD_ENTRIES}
+            entries={entries}
             selectedGame={selectedGame}
-            onSelectGame={setSelectedGame}
+            onSelectGame={(g) => {
+              setIsLoading(true);
+              setSelectedGame(g);
+            }}
+            period={period}
+            onSelectPeriod={(p) => {
+              setIsLoading(true);
+              setPeriod(p);
+            }}
+            isLoading={isLoading}
           />
         </div>
       </main>
