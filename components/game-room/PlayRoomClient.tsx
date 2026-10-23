@@ -30,6 +30,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
 
   useEffect(() => {
     const saved = getHighScore(gameId, isAsteroids ? 231800 : 142500);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighScore(saved);
   }, [gameId, isAsteroids]);
 

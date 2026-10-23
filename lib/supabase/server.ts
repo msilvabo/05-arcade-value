@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/**
+ * Cliente de Supabase para operaciones de servidor autenticadas (lee y escribe cookies de sesión).
+ */
 export const createClient = async () => {
   const cookieStore = await cookies();
   return createServerClient(
@@ -16,9 +19,25 @@ export const createClient = async () => {
             );
           } catch {
             // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
           }
         },
+      },
+    }
+  );
+};
+
+/**
+ * Cliente de Supabase para consultas públicas del servidor (no requiere ni bloquea cookies).
+ * Ideal para lectura de tablas públicas como games, scores y perfiles en prerender y SSG.
+ */
+export const createPublicClient = () => {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
       },
     }
   );

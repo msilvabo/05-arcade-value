@@ -1,6 +1,6 @@
 # Spec 07: Leaderboard y Tabla de Juegos en Supabase
 
-**Estado:** Aprobado  
+**Estado:** Implemented  
 **Fecha:** 2026-10-23  
 **Depende de:** 01-biblioteca-juegos-mvp.md, 05-supabase-auth-y-perfiles.md
 
@@ -216,13 +216,13 @@ export interface LeaderboardEntryDTO {
 
 ## Criterios de Aceptación
 
-- [ ] Archivo de migración `supabase/migrations/20261023000000_create_games_and_scores_tables.sql` creado con sintaxis PostgreSQL válida para `profiles`, `games`, `scores`, trigger de registro y RLS habilitado.
-- [ ] Archivo `supabase/seed.sql` creado con los juegos de `data/games.ts` y récords de prueba.
-- [ ] Tipos TypeScript definidos en `types/database.ts` sin errores de compilación (`strict: true`).
-- [ ] Servicios de consulta en `lib/services/` capaces de consultar Supabase mediante join (`scores` + `profiles` + `games`).
-- [ ] Sistema de fallback funcional: si las variables de entorno de Supabase no están presentes o la tabla no responde, la página `/leaderboard` muestra los datos mock sin crashear.
-- [ ] La página `/leaderboard` renderiza dinámicamente las entradas de clasificación y el selector de juegos.
-- [ ] `npm run build` y `npm run lint` finalizan con código de salida 0.
+- [x] Archivo de migración `supabase/migrations/20261023000000_create_games_and_scores_tables.sql` creado con sintaxis PostgreSQL válida para `profiles`, `games`, `scores`, trigger de registro y RLS habilitado.
+- [x] Archivo `supabase/seed.sql` creado con los juegos de `data/games.ts` y récords de prueba.
+- [x] Tipos TypeScript definidos en `types/database.ts` sin errores de compilación (`strict: true`).
+- [x] Servicios de consulta en `lib/services/` capaces de consultar Supabase mediante join (`scores` + `profiles` + `games`).
+- [x] Sistema de fallback funcional: si las variables de entorno de Supabase no están presentes o la tabla no responde, la página `/leaderboard` muestra los datos mock sin crashear.
+- [x] La página `/leaderboard` renderiza dinámicamente las entradas de clasificación y el selector de juegos.
+- [x] `npm run build` y `npm run lint` finalizan con código de salida 0.
 
 ---
 

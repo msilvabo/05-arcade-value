@@ -8,9 +8,35 @@ interface LeaderboardPodiumProps {
 }
 
 export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
-  const top1 = entries.find((e) => e.rank === 1);
-  const top2 = entries.find((e) => e.rank === 2);
-  const top3 = entries.find((e) => e.rank === 3);
+  const top1 = entries.find((e) => e.rank === 1) || entries[0];
+  const top2 =
+    entries.find((e) => e.rank === 2) ||
+    entries[1] ||
+    (top1
+      ? {
+          ...top1,
+          rank: 2,
+          gamerTag: "VACANTE",
+          formattedScore: "0",
+          accuracy: "--",
+          combo: "--",
+          avatar: "",
+        }
+      : null);
+  const top3 =
+    entries.find((e) => e.rank === 3) ||
+    entries[2] ||
+    (top1
+      ? {
+          ...top1,
+          rank: 3,
+          gamerTag: "VACANTE",
+          formattedScore: "0",
+          accuracy: "--",
+          combo: "--",
+          avatar: "",
+        }
+      : null);
 
   if (!top1 || !top2 || !top3) return null;
 
@@ -34,7 +60,9 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
         {/* Puesto 2: Plata */}
         <div className="order-2 md:order-1 flex flex-col rounded-lg bg-surface-container-low p-space-md border border-outline-variant/30 relative group hover:border-secondary-container transition-all">
           <div className="absolute -top-3 left-space-md px-space-sm py-0.5 rounded bg-surface-container-highest border border-outline font-label-sm text-label-sm uppercase font-bold text-secondary-fixed shadow-[0_0_10px_rgba(255,178,191,0.4)] flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">military_tech</span>
+            <span className="material-symbols-outlined text-[14px]">
+              military_tech
+            </span>
             RANGO #02 // PLATA
           </div>
 
@@ -48,7 +76,9 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-surface-container-high text-secondary-fixed">
-                <span className="material-symbols-outlined text-[64px]">person</span>
+                <span className="material-symbols-outlined text-[64px]">
+                  person
+                </span>
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
@@ -70,12 +100,20 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
 
           <div className="grid grid-cols-2 gap-space-xs mt-space-sm pt-space-xs border-t border-outline-variant/30 font-label-sm text-label-sm">
             <div>
-              <span className="text-outline uppercase text-[10px]">PRECISIÓN: </span>
-              <span className="text-primary-fixed font-bold">{top2.accuracy}</span>
+              <span className="text-outline uppercase text-[10px]">
+                PRECISIÓN:{" "}
+              </span>
+              <span className="text-primary-fixed font-bold">
+                {top2.accuracy}
+              </span>
             </div>
             <div className="text-right">
-              <span className="text-outline uppercase text-[10px]">COMBO: </span>
-              <span className="text-secondary-fixed font-bold">{top2.combo}</span>
+              <span className="text-outline uppercase text-[10px]">
+                COMBO:{" "}
+              </span>
+              <span className="text-secondary-fixed font-bold">
+                {top2.combo}
+              </span>
             </div>
           </div>
         </div>
@@ -97,7 +135,9 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-surface-container-high text-tertiary-fixed">
-                <span className="material-symbols-outlined text-[72px]">crown</span>
+                <span className="material-symbols-outlined text-[72px]">
+                  crown
+                </span>
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent"></div>
@@ -120,11 +160,17 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
 
           <div className="grid grid-cols-2 gap-space-xs mt-space-sm pt-space-xs border-t border-primary-container/40 font-label-sm text-label-sm">
             <div>
-              <span className="text-outline uppercase text-[10px]">PRECISIÓN: </span>
-              <span className="text-tertiary-fixed font-bold">{top1.accuracy} (PERFECT)</span>
+              <span className="text-outline uppercase text-[10px]">
+                PRECISIÓN:{" "}
+              </span>
+              <span className="text-tertiary-fixed font-bold">
+                {top1.accuracy} (PERFECT)
+              </span>
             </div>
             <div className="text-right">
-              <span className="text-outline uppercase text-[10px]">COMBO MAX: </span>
+              <span className="text-outline uppercase text-[10px]">
+                COMBO MAX:{" "}
+              </span>
               <span className="text-primary-fixed font-bold">{top1.combo}</span>
             </div>
           </div>
@@ -133,7 +179,9 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
         {/* Puesto 3: Bronce */}
         <div className="order-3 md:order-3 flex flex-col rounded-lg bg-surface-container-low p-space-md border border-outline-variant/30 relative group hover:border-tertiary-container transition-all">
           <div className="absolute -top-3 right-space-md px-space-sm py-0.5 rounded bg-surface-container-highest border border-outline font-label-sm text-label-sm uppercase font-bold text-tertiary-fixed shadow-[0_0_10px_rgba(253,255,181,0.3)] flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">emoji_events</span>
+            <span className="material-symbols-outlined text-[14px]">
+              emoji_events
+            </span>
             RANGO #03 // BRONCE
           </div>
 
@@ -147,7 +195,9 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-surface-container-high text-tertiary-fixed">
-                <span className="material-symbols-outlined text-[64px]">person</span>
+                <span className="material-symbols-outlined text-[64px]">
+                  person
+                </span>
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
@@ -169,12 +219,20 @@ export const LeaderboardPodium: FC<LeaderboardPodiumProps> = ({ entries }) => {
 
           <div className="grid grid-cols-2 gap-space-xs mt-space-sm pt-space-xs border-t border-outline-variant/30 font-label-sm text-label-sm">
             <div>
-              <span className="text-outline uppercase text-[10px]">PRECISIÓN: </span>
-              <span className="text-primary-fixed font-bold">{top3.accuracy}</span>
+              <span className="text-outline uppercase text-[10px]">
+                PRECISIÓN:{" "}
+              </span>
+              <span className="text-primary-fixed font-bold">
+                {top3.accuracy}
+              </span>
             </div>
             <div className="text-right">
-              <span className="text-outline uppercase text-[10px]">COMBO: </span>
-              <span className="text-secondary-fixed font-bold">{top3.combo}</span>
+              <span className="text-outline uppercase text-[10px]">
+                COMBO:{" "}
+              </span>
+              <span className="text-secondary-fixed font-bold">
+                {top3.combo}
+              </span>
             </div>
           </div>
         </div>
