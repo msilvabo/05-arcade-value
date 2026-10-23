@@ -4,6 +4,7 @@ export interface GameScorePayload {
   gameId: string;
   score: number;
   userId?: string | null;
+  playerName?: string;
   createdAt?: string;
 }
 
@@ -29,7 +30,8 @@ export function getHighScore(gameId: string, fallbackDefault = 0): number {
 
 export async function saveGameScore(
   gameId: string,
-  score: number
+  score: number,
+  playerName?: string
 ): Promise<HighScoreResult> {
   let isNewRecord = false;
   let currentHighScore = getHighScore(gameId, 0);
@@ -48,7 +50,7 @@ export async function saveGameScore(
 
   let persistedToSupabase = false;
 
-  // Intentar sincronización con Supabase si está disponible en el cliente
+  // Sincronización con Supabase (para usuarios autenticados o invitados)
   if (
     typeof window !== "undefined" &&
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -60,19 +62,23 @@ export async function saveGameScore(
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
-        const { error } = await supabase.from("game_scores").insert({
-          user_id: user.id,
-          game_id: gameId,
-          score: score,
-        });
+      const { error } = await supabase.from("scores").insert({
+        user_id: user?.id || null,
+        game_id: gameId,
+        score: score,
+        player_name:
+          playerName || user?.user_metadata?.gamer_tag || "PILOTO_VAULT",
+        accuracy: "100%",
+        combo: "x1",
+      });
 
-        if (!error) {
-          persistedToSupabase = true;
-        }
+      if (!error) {
+        persistedToSupabase = true;
+      } else {
+        console.warn("No se pudo persistir récord en Supabase:", error.message);
       }
-    } catch {
-      // Degradar silenciosamente a localStorage
+    } catch (err) {
+      console.warn("Fallo de conexión al registrar récord en Supabase:", err);
     }
   }
 

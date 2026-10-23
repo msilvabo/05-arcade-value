@@ -2,29 +2,79 @@
 
 import { FC, useState, useMemo } from "react";
 import { LeaderboardEntry, LeaderboardPeriod } from "@/types/leaderboard";
+import { Game } from "@/types/game";
+
+const ICON_MAP: Record<string, string> = {
+  arkanoid: "sports_baseball",
+  tetris: "grid_view",
+  "space-invaders": "rocket_launch",
+  pacman: "motion_photos_on",
+  snake: "gesture",
+  asteroids: "change_history",
+};
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   selectedGame: string;
   onSelectGame: (gameId: string) => void;
+  games?: Game[];
+  isLoading?: boolean;
 }
 
 export const LeaderboardTable: FC<LeaderboardTableProps> = ({
   entries,
   selectedGame,
   onSelectGame,
+  games,
+  isLoading = false,
 }) => {
   const [period, setPeriod] = useState<LeaderboardPeriod>("all-time");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const gamesList = [
-    { id: "arkanoid", name: "ARKANOID", icon: "sports_baseball", record: "984.520" },
-    { id: "tetris", name: "TETRIS", icon: "grid_view", record: "842.100" },
-    { id: "space-invaders", name: "INVADERS", icon: "rocket_launch", record: "620.000" },
-    { id: "pacman", name: "PAC-MAN", icon: "motion_photos_on", record: "3.333.360" },
-    { id: "snake", name: "SNAKE", icon: "gesture", record: "450.800" },
-    { id: "asteroids", name: "ASTEROIDS", icon: "change_history", record: "510.900" },
-  ];
+  const gamesList = useMemo(() => {
+    if (games && games.length > 0) {
+      return games.map((game) => ({
+        id: game.id,
+        name: game.title.split(":")[0].replace(/^(CYBER|CHRONO|SPACE)\s+/, ""),
+        icon: ICON_MAP[game.artType] || "videogame_asset",
+        record: game.record?.score?.replace(" PTS", "") || "---",
+      }));
+    }
+
+    return [
+      {
+        id: "arkanoid-neon-revenge",
+        name: "ARKANOID",
+        icon: "sports_baseball",
+        record: "984.520",
+      },
+      {
+        id: "cyber-tetris-99",
+        name: "TETRIS",
+        icon: "grid_view",
+        record: "842.100",
+      },
+      {
+        id: "space-invaders-galaxy",
+        name: "INVADERS",
+        icon: "rocket_launch",
+        record: "620.000",
+      },
+      {
+        id: "pacman-neon-maze",
+        name: "PAC-MAN",
+        icon: "motion_photos_on",
+        record: "3.333.360",
+      },
+      { id: "chrono-snake", name: "SNAKE", icon: "gesture", record: "450.800" },
+      {
+        id: "asteroids-2084",
+        name: "ASTEROIDS",
+        icon: "change_history",
+        record: "510.900",
+      },
+    ];
+  }, [games]);
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
@@ -45,7 +95,9 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
             <span className="material-symbols-outlined text-primary-fixed text-[18px]">
               tune
             </span>
-            <span className="text-primary-fixed font-bold">INTERVALO DE AUDITORÍA:</span>
+            <span className="text-primary-fixed font-bold">
+              INTERVALO DE AUDITORÍA:
+            </span>
           </div>
           <div className="flex items-center gap-space-xs bg-surface-container-lowest p-1 rounded">
             <button
@@ -87,7 +139,11 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
         {/* Cartuchos Arcade Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-space-sm">
           {gamesList.map((game, idx) => {
-            const isSelected = selectedGame === game.id;
+            const isSelected =
+              selectedGame === game.id ||
+              selectedGame.startsWith(game.id) ||
+              game.id.startsWith(selectedGame);
+
             return (
               <button
                 key={game.id}
@@ -144,7 +200,15 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
       </div>
 
       {/* Tabla Completa Top 10 */}
-      <div className="bg-surface-container-low rounded-lg p-space-md border border-outline-variant/30 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+      <div className="bg-surface-container-low rounded-lg p-space-md border border-outline-variant/30 shadow-[0_0_20px_rgba(0,0,0,0.5)] relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-surface/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg">
+            <span className="font-headline-sm text-headline-sm text-primary animate-pulse tracking-widest uppercase">
+              SINCRONIZANDO TELEMETRÍA...
+            </span>
+          </div>
+        )}
+
         {/* Cabecera y Buscador */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md mb-space-md pb-space-sm border-b border-outline-variant/30">
           <div className="flex items-center gap-space-xs">
@@ -152,7 +216,7 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
               leaderboard
             </span>
             <h2 className="font-headline-md text-headline-md uppercase text-on-surface tracking-wider">
-              CLASIFICACIÓN COMPLETA // TOP 10
+              CLASIFICACIÓN // {filteredEntries.length} PILOTOS REGISTRADOS
             </h2>
           </div>
 
@@ -172,110 +236,124 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
 
         {/* Tabla Responsiva */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-outline-variant/40 text-outline font-label-sm text-label-sm uppercase tracking-wider">
-                <th className="py-space-sm px-space-md">RANGO</th>
-                <th className="py-space-sm px-space-md">PILOTO // GAMERTAG</th>
-                <th className="py-space-sm px-space-md text-right">PUNTUACIÓN</th>
-                <th className="py-space-sm px-space-md text-center">PRECISIÓN</th>
-                <th className="py-space-sm px-space-md text-center">COMBO</th>
-                <th className="py-space-sm px-space-md text-right hidden sm:table-cell">FECHA</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant/20 font-body-md text-body-md">
-              {filteredEntries.map((entry) => {
-                const isChampion = entry.rank === 1;
-                const isTop3 = entry.rank <= 3;
-                return (
-                  <tr
-                    key={entry.rank}
-                    className={`transition-colors hover:bg-surface-container group ${
-                      isChampion
-                        ? "bg-primary-container/10 font-bold"
-                        : isTop3
-                        ? "bg-surface-container-high/40"
-                        : ""
-                    }`}
-                  >
-                    {/* Rango */}
-                    <td className="py-space-sm px-space-md whitespace-nowrap">
-                      <div className="flex items-center gap-space-xs">
-                        <span
-                          className={`w-7 h-7 rounded flex items-center justify-center font-label-md text-label-md font-bold ${
-                            entry.rank === 1
-                              ? "bg-tertiary-container text-on-tertiary shadow-[0_0_8px_rgba(222,231,0,0.8)]"
-                              : entry.rank === 2
-                              ? "bg-secondary-fixed text-on-secondary-fixed shadow-[0_0_8px_rgba(255,178,191,0.5)]"
-                              : entry.rank === 3
-                              ? "bg-tertiary text-on-tertiary"
-                              : "bg-surface-container-highest text-outline"
-                          }`}
-                        >
-                          {entry.rank < 10 ? `0${entry.rank}` : entry.rank}
-                        </span>
-                        {isChampion && (
-                          <span className="material-symbols-outlined text-tertiary-fixed text-[18px]">
-                            crown
+          {filteredEntries.length === 0 ? (
+            <div className="py-space-xl text-center text-outline font-label-md text-label-md uppercase tracking-wider">
+              NO SE ENCONTRARON PUNTUACIONES REGISTRADAS PARA ESTE CRITERIO
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-outline-variant/40 text-outline font-label-sm text-label-sm uppercase tracking-wider">
+                  <th className="py-space-sm px-space-md">RANGO</th>
+                  <th className="py-space-sm px-space-md">
+                    PILOTO // GAMERTAG
+                  </th>
+                  <th className="py-space-sm px-space-md text-right">
+                    PUNTUACIÓN
+                  </th>
+                  <th className="py-space-sm px-space-md text-center">
+                    PRECISIÓN
+                  </th>
+                  <th className="py-space-sm px-space-md text-center">COMBO</th>
+                  <th className="py-space-sm px-space-md text-right hidden sm:table-cell">
+                    FECHA
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant/20 font-body-md text-body-md">
+                {filteredEntries.map((entry) => {
+                  const isChampion = entry.rank === 1;
+                  const isTop3 = entry.rank <= 3;
+                  return (
+                    <tr
+                      key={`${entry.gameId}-${entry.gamerTag}-${entry.rank}`}
+                      className={`transition-colors hover:bg-surface-container group ${
+                        isChampion
+                          ? "bg-primary-container/10 font-bold"
+                          : isTop3
+                            ? "bg-surface-container-high/40"
+                            : ""
+                      }`}
+                    >
+                      {/* Rango */}
+                      <td className="py-space-sm px-space-md whitespace-nowrap">
+                        <div className="flex items-center gap-space-xs">
+                          <span
+                            className={`w-7 h-7 rounded flex items-center justify-center font-label-md text-label-md font-bold ${
+                              entry.rank === 1
+                                ? "bg-tertiary-container text-on-tertiary shadow-[0_0_8px_rgba(222,231,0,0.8)]"
+                                : entry.rank === 2
+                                  ? "bg-secondary-fixed text-on-secondary-fixed shadow-[0_0_8px_rgba(255,178,191,0.5)]"
+                                  : entry.rank === 3
+                                    ? "bg-tertiary text-on-tertiary"
+                                    : "bg-surface-container-highest text-outline"
+                            }`}
+                          >
+                            {entry.rank < 10 ? `0${entry.rank}` : entry.rank}
                           </span>
-                        )}
-                      </div>
-                    </td>
+                          {isChampion && (
+                            <span className="material-symbols-outlined text-tertiary-fixed text-[18px]">
+                              crown
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
-                    {/* GamerTag & Insignia */}
-                    <td className="py-space-sm px-space-md whitespace-nowrap">
-                      <div className="flex items-center gap-space-sm">
-                        <span
-                          className={`font-title-sm text-title-sm font-bold uppercase tracking-wider transition-colors ${
-                            isChampion
-                              ? "text-tertiary-fixed group-hover:text-primary"
-                              : isTop3
-                              ? "text-primary-fixed group-hover:text-primary"
-                              : "text-on-surface group-hover:text-primary"
-                          }`}
-                        >
-                          {entry.gamerTag}
-                        </span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-label-sm uppercase tracking-wider ${
-                            entry.badge === "CHAMPION"
-                              ? "bg-tertiary-container/30 text-tertiary-fixed border border-tertiary-container"
-                              : entry.badge === "MASTER"
-                              ? "bg-secondary-container/30 text-secondary-container border border-secondary-container"
-                              : entry.badge === "VETERAN"
-                              ? "bg-primary-container/30 text-primary-fixed border border-primary-container"
-                              : "bg-surface-container-highest text-outline"
-                          }`}
-                        >
-                          {entry.badge}
-                        </span>
-                      </div>
-                    </td>
+                      {/* GamerTag & Insignia */}
+                      <td className="py-space-sm px-space-md whitespace-nowrap">
+                        <div className="flex items-center gap-space-sm">
+                          <span
+                            className={`font-title-sm text-title-sm font-bold uppercase tracking-wider transition-colors ${
+                              isChampion
+                                ? "text-tertiary-fixed group-hover:text-primary"
+                                : isTop3
+                                  ? "text-primary-fixed group-hover:text-primary"
+                                  : "text-on-surface group-hover:text-primary"
+                            }`}
+                          >
+                            {entry.gamerTag}
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-label-sm uppercase tracking-wider ${
+                              entry.badge === "CHAMPION"
+                                ? "bg-tertiary-container/30 text-tertiary-fixed border border-tertiary-container"
+                                : entry.badge === "MASTER"
+                                  ? "bg-secondary-container/30 text-secondary-container border border-secondary-container"
+                                  : entry.badge === "VETERAN"
+                                    ? "bg-primary-container/30 text-primary-fixed border border-primary-container"
+                                    : "bg-surface-container-highest text-outline"
+                            }`}
+                          >
+                            {entry.badge}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Puntuación */}
-                    <td className="py-space-sm px-space-md text-right font-title-sm text-title-sm text-primary font-bold tracking-wider whitespace-nowrap drop-shadow-[0_0_4px_rgba(0,245,255,0.4)]">
-                      {entry.formattedScore}
-                    </td>
+                      {/* Puntuación */}
+                      <td className="py-space-sm px-space-md text-right font-title-sm text-title-sm text-primary font-bold tracking-wider whitespace-nowrap drop-shadow-[0_0_4px_rgba(0,245,255,0.4)]">
+                        {entry.formattedScore}
+                      </td>
 
-                    {/* Precisión */}
-                    <td className="py-space-sm px-space-md text-center text-primary-fixed whitespace-nowrap">
-                      {entry.accuracy}
-                    </td>
+                      {/* Precisión */}
+                      <td className="py-space-sm px-space-md text-center text-primary-fixed whitespace-nowrap">
+                        {entry.accuracy}
+                      </td>
 
-                    {/* Combo */}
-                    <td className="py-space-sm px-space-md text-center text-secondary-fixed whitespace-nowrap">
-                      {entry.combo}
-                    </td>
+                      {/* Combo */}
+                      <td className="py-space-sm px-space-md text-center text-secondary-fixed whitespace-nowrap">
+                        {entry.combo}
+                      </td>
 
-                    {/* Fecha */}
-                    <td className="py-space-sm px-space-md text-right text-outline text-body-sm whitespace-nowrap hidden sm:table-cell">
-                      {entry.date}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      {/* Fecha */}
+                      <td className="py-space-sm px-space-md text-right text-outline text-body-sm whitespace-nowrap hidden sm:table-cell">
+                        {entry.date}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

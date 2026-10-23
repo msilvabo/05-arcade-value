@@ -2,6 +2,7 @@
 
 import { FC, useState } from "react";
 import Link from "next/link";
+import { submitScoreAction } from "@/app/actions/leaderboard";
 
 interface GameRoomOverlayProps {
   isPaused: boolean;
@@ -20,12 +21,34 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
   score,
   gameId,
 }) => {
-  const [initials, setInitials] = useState<string[]>(["R", "P", "8"]);
-  const [savedMessage, setSavedMessage] = useState(false);
+  const [nickname, setNickname] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saved, setSaved] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const handleSaveScore = () => {
-    setSavedMessage(true);
-    setTimeout(() => setSavedMessage(false), 3000);
+  const handleSaveScore = async () => {
+    if (isSaving || saved) return;
+    setIsSaving(true);
+    setErrorMessage("");
+
+    const tag = nickname.trim() || "PILOTO_VAULT";
+    const result = await submitScoreAction({
+      gameId,
+      score,
+      nickname: tag,
+      accuracy: "98%",
+      combo: "x16",
+    });
+
+    setIsSaving(false);
+
+    if (result.success) {
+      setSaved(true);
+    } else {
+      setErrorMessage(
+        result.error || "No se pudo sincronizar la puntuación con el servidor."
+      );
+    }
   };
 
   if (!isPaused && !isGameOver) return null;
@@ -89,93 +112,110 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
           </h2>
 
           <p className="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider mt-1 mb-4">
-            HAS COMPLETADO CON HONOR LA MATRIZ:{" "}
-            <span className="text-primary-fixed">NIVEL 04</span>
+            PARTIDA FINALIZADA // REGISTRO DE TELEMETRÍA DISPONIBLE
           </p>
 
           {/* Marcador Final */}
           <div className="w-full bg-surface-container-lowest p-4 rounded mb-4 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] border border-outline-variant/30 flex flex-col items-center">
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1">
-              PUNTUACIÓN TOTAL ACUMULADA
+              PUNTUACIÓN OBTENIDA
             </span>
             <span className="font-headline-lg text-headline-lg text-primary tracking-widest font-bold drop-shadow-[0_0_12px_rgba(0,245,255,0.9)]">
               {score.toLocaleString()} PUNTOS
             </span>
-            <div className="mt-2 inline-flex items-center gap-1.5 bg-tertiary-container/20 px-2.5 py-1 rounded border border-tertiary-container/30">
-              <span className="material-symbols-outlined text-tertiary-fixed text-[16px]">
-                military_tech
-              </span>
-              <span className="font-label-sm text-label-sm text-tertiary-fixed font-bold tracking-widest uppercase">
-                ¡NUEVA MEJOR MARCA PERSONAL REGISTRADA!
-              </span>
-            </div>
           </div>
 
-          {/* Iniciales High Score */}
-          <div className="w-full mb-6">
-            <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-2">
-              GUARDAR PUNTUACIÓN EN EL SALÓN DE LA FAMA
+          {/* Registro de Nickname en Salón de la Fama */}
+          <div className="w-full mb-5 bg-surface-container p-3.5 rounded border border-outline-variant/30 text-left">
+            <label className="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider block mb-1.5 font-bold">
+              REGISTRAR EN EL SALÓN DE LA FAMA
             </label>
-            <div className="flex items-center justify-center gap-3">
-              <span className="font-label-md text-label-md text-outline uppercase">
-                TAG PILOTO:
-              </span>
-              <div className="flex gap-2">
-                {[0, 1, 2].map((idx) => (
-                  <input
-                    key={idx}
-                    type="text"
-                    maxLength={1}
-                    value={initials[idx]}
-                    onChange={(e) => {
-                      const newInitials = [...initials];
-                      newInitials[idx] = e.target.value.toUpperCase();
-                      setInitials(newInitials);
-                    }}
-                    className="w-12 h-12 bg-surface-container-highest text-primary-container font-headline-md text-headline-md text-center uppercase rounded focus:bg-surface-bright focus:text-white shadow-[0_0_10px_rgba(0,245,255,0.4)] outline-none border border-outline-variant/40"
-                  />
-                ))}
-              </div>
+            <p className="text-on-surface-variant text-[12px] mb-2.5">
+              Ingresa tu nickname o gamer tag para figurar en la tabla global:
+            </p>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                maxLength={16}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value.toUpperCase())}
+                placeholder="TU NICKNAME (EJ: PILOTO_99)"
+                disabled={saved || isSaving}
+                className="flex-1 bg-surface-container-lowest text-primary font-headline-sm text-headline-sm px-3 py-2 rounded focus:border-primary-container focus:shadow-[0_0_10px_rgba(0,245,255,0.4)] outline-none border border-outline-variant/40 uppercase placeholder:text-outline tracking-wider"
+              />
+
+              <button
+                type="button"
+                onClick={handleSaveScore}
+                disabled={isSaving || saved}
+                className={`px-4 py-2 rounded font-label-md text-label-md uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  saved
+                    ? "bg-tertiary text-on-tertiary shadow-[0_0_12px_rgba(222,231,0,0.8)] cursor-default"
+                    : "bg-primary-container hover:bg-white text-on-primary shadow-[0_0_15px_rgba(0,245,255,0.7)]"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {saved ? "check_circle" : "publish"}
+                </span>
+                {saved ? "REGISTRADO" : isSaving ? "ENVIANDO..." : "REGISTRAR"}
+              </button>
             </div>
+
+            {/* Mensajes de Confirmación o Error */}
+            {saved && (
+              <div className="mt-2.5 p-2 bg-tertiary-container/20 rounded border border-tertiary-container/40 flex items-center justify-between gap-2">
+                <span className="text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wider font-bold">
+                  ✓ ¡PUNTUACIÓN PUBLICADA EN EL SALÓN DE LA FAMA!
+                </span>
+                <Link
+                  href="/leaderboard"
+                  className="px-2.5 py-1 bg-tertiary-container text-on-tertiary rounded text-[11px] font-label-sm font-bold uppercase tracking-wider hover:bg-white transition-colors"
+                >
+                  VER TABLA
+                </Link>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="mt-2 text-error font-label-sm text-label-sm uppercase tracking-wider">
+                ⚠ {errorMessage}
+              </div>
+            )}
           </div>
 
           {/* Botones de Acción */}
           <div className="w-full flex flex-col gap-2.5">
-            <button
-              type="button"
-              onClick={handleSaveScore}
-              className="w-full py-3 bg-primary-container hover:bg-white text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(0,245,255,0.8)] transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-2 cursor-pointer font-bold"
-            >
-              <span className="material-symbols-outlined text-[24px]">verified</span>
-              GUARDAR PUNTUACIÓN
-            </button>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
               <button
                 type="button"
                 onClick={onRestart}
                 className="py-3 bg-secondary-container hover:bg-secondary text-white font-title-sm text-title-sm uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,77,128,0.7)] transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5 cursor-pointer font-bold"
               >
-                <span className="material-symbols-outlined text-[20px]">replay</span>
-                REINTENTAR
+                <span className="material-symbols-outlined text-[20px]">
+                  replay
+                </span>
+                REINTENTAR PARTIDA
               </button>
 
               <Link
-                href="/"
+                href="/leaderboard"
                 className="py-3 bg-surface-container-highest hover:bg-surface-bright text-on-surface font-title-sm text-title-sm uppercase tracking-wider rounded transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5 text-center border border-outline-variant/30"
               >
-                <span className="material-symbols-outlined text-[20px]">door_open</span>
-                IR AL VAULT
+                <span className="material-symbols-outlined text-[20px]">
+                  leaderboard
+                </span>
+                SALÓN DE LA FAMA
               </Link>
             </div>
-          </div>
 
-          {/* Mensaje de Confirmación */}
-          {savedMessage && (
-            <div className="mt-3 text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-widest animate-pulse">
-              ✓ DATOS TRANSMITIDOS SATISFACTORIAMENTE AL NODO PRINCIPAL
-            </div>
-          )}
+            <Link
+              href="/"
+              className="py-2.5 bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider rounded transition-all text-center"
+            >
+              IR AL VAULT PRINCIPAL
+            </Link>
+          </div>
         </div>
       )}
     </div>
