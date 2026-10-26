@@ -2,6 +2,7 @@
 
 import { FC, useState, useMemo } from "react";
 import { LeaderboardEntry, LeaderboardPeriod } from "@/types/leaderboard";
+import { getLeaderboardCartridges } from "@/app/games/_lib/registry";
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -32,39 +33,7 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
     }
   };
 
-  const gamesList = [
-    {
-      id: "arkanoid-neon-revenge",
-      name: "ARKANOID",
-      icon: "sports_baseball",
-      record: "984.520",
-    },
-    {
-      id: "cyber-tetris-99",
-      name: "TETRIS",
-      icon: "grid_view",
-      record: "842.100",
-    },
-    {
-      id: "space-invaders-galaxy",
-      name: "INVADERS",
-      icon: "rocket_launch",
-      record: "620.000",
-    },
-    {
-      id: "pacman-neon-maze",
-      name: "PAC-MAN",
-      icon: "motion_photos_on",
-      record: "3.333.360",
-    },
-    { id: "chrono-snake", name: "SNAKE", icon: "gesture", record: "450.800" },
-    {
-      id: "asteroids-2084",
-      name: "ASTEROIDS",
-      icon: "change_history",
-      record: "510.900",
-    },
-  ];
+  const gamesList = useMemo(() => getLeaderboardCartridges(), []);
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {

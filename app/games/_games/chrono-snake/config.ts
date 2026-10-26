@@ -34,6 +34,7 @@ export const SNAKE_DETAILS: GameExtendedDetails = {
   recordHolder: "SNAKE_MASTER",
   activePlayers: 31,
   cabinetNumber: "#033",
+  materialIcon: "gesture",
   missionLog: {
     story:
       "Guía el pulso de energía Chrono a través de una cuadrícula de vectores. Con cada nodo de datos consumido, el tren de impulsos se alarga y la frecuencia cardíaca aumenta.",

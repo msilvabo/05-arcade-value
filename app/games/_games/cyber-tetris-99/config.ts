@@ -34,6 +34,7 @@ export const TETRIS_DETAILS: GameExtendedDetails = {
   recordHolder: "NEON_VALKYRIE",
   activePlayers: 67,
   cabinetNumber: "#014",
+  materialIcon: "grid_view",
   missionLog: {
     story:
       "Los tetrominós cuánticos caen en cascada sobre la matriz de memoria del sistema central. Alinea los bloques para disipar el sobrecalentamiento antes de que la memoria se desborde.",

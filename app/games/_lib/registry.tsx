@@ -68,3 +68,19 @@ export const CabinetGameHost: FC<{
 export function getAvailableGameIds(): string[] {
   return GAME_MODULES.map((m) => m.id);
 }
+
+export interface LeaderboardCartridge {
+  id: string;
+  name: string;
+  icon: string;
+  record: string;
+}
+
+export function getLeaderboardCartridges(): LeaderboardCartridge[] {
+  return GAME_MODULES.map((m) => ({
+    id: m.id,
+    name: m.details.title || m.summary.title,
+    icon: m.details.materialIcon || "sports_esports",
+    record: m.details.maxScore || "100.000",
+  }));
+}

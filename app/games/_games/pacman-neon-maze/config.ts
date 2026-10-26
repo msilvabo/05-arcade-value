@@ -34,6 +34,7 @@ export const PACMAN_DETAILS: GameExtendedDetails = {
   recordHolder: "BILLY_CHAMP",
   activePlayers: 53,
   cabinetNumber: "#021",
+  materialIcon: "motion_photos_on",
   missionLog: {
     story:
       "Atraviesa el laberinto de neón recolectando píldoras de energía cuántica mientras eres perseguido por los cuatro algoritmos fantasma: Blinky, Pinky, Inky y Clyde.",

@@ -34,6 +34,7 @@ export const ARKANOID_DETAILS: GameExtendedDetails = {
   recordHolder: "CYBER_GHOST",
   activePlayers: 42,
   cabinetNumber: "#042",
+  materialIcon: "sports_baseball",
   missionLog: {
     story:
       "La nave nodriza ARKAIS ha sido corrompida por la entidad dimensional DOH. Como último piloto a bordo de la cápsula de escape VAUS, debes atravesar 33 sectores espaciales defendidos por murallas de fotones refractarios. Tu única arma es la esfera reflectora de plasma comprimido.",

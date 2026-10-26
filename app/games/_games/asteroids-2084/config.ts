@@ -34,6 +34,7 @@ export const ASTEROIDS_DETAILS: GameExtendedDetails = {
   recordHolder: "VECTOR_ACE",
   activePlayers: 19,
   cabinetNumber: "#084",
+  materialIcon: "change_history",
   missionLog: {
     story:
       "Navega un caza triangular en un campo denso de asteroides interestelares con inercia pura newtoniana en un monitor vectorial de alta frecuencia.",

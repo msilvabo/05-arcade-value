@@ -34,6 +34,7 @@ export const SPACE_INVADERS_DETAILS: GameExtendedDetails = {
   recordHolder: "RETRO_BLASTER",
   activePlayers: 29,
   cabinetNumber: "#001",
+  materialIcon: "rocket_launch",
   missionLog: {
     story:
       "Una flota masiva de invasores extraterrestres desciende en formaciones sincronizadas. Pilota el cañón láser terrestre tras los cuatro búnkeres de protección antes de que alcancen la superficie.",
