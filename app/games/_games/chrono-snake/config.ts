@@ -7,11 +7,11 @@ export const SNAKE_SUMMARY: Game = {
   category: "ARCADE PUZZLE",
   categoryKey: ["puzzle", "action-maze"],
   year: 1997,
-  badge: "MULTI-PULSO",
+  badge: "CLÁSICO RETRO",
   badgeVariant: "surface",
   difficulty: "NORMAL",
   description:
-    "Aliméntate de condensadores de pulso y desafía los límites del hiper-espacio.",
+    "Devora frutas cibernéticas del atlas cuántico y evita los muros sólidos de la cabina.",
   record: {
     score: "87,150 PTS",
     rawScore: 87150,
@@ -26,7 +26,7 @@ export const SNAKE_DETAILS: GameExtendedDetails = {
   title: "CHRONO SNAKE",
   subtitle: "MULTI-PULSE",
   badge: "POPULAR",
-  version: "REV.1997.008",
+  version: "REV.1997.009",
   releaseYear: 1997,
   developer: "NOKIA & RETRO VAULT",
   genre: "Arcade Reflexes",
@@ -37,18 +37,23 @@ export const SNAKE_DETAILS: GameExtendedDetails = {
   materialIcon: "gesture",
   missionLog: {
     story:
-      "Guía el pulso de energía Chrono a través de una cuadrícula de vectores. Con cada nodo de datos consumido, el tren de impulsos se alarga y la frecuencia cardíaca aumenta.",
+      "Guía la serpiente de impulsos Chrono a través de una cuadrícula retro de vectores. Con cada fruta consumida, tu estela se alarga y la velocidad del sistema se acelera.",
     objective:
-      "Consume todos los orbes de energía sin colisionar con los bordes de la red ni con tu propia estela.",
+      "Recoge la mayor cantidad de frutas del atlas evitando colisionar contra los muros de la pantalla o contra tu propio cuerpo.",
     controls: [
-      { key: "[Flechas]", action: "Cambiar vector de desplazamiento" },
+      {
+        key: "[Flechas] / [WASD]",
+        action:
+          "Dirección de desplazamiento (Arriba, Abajo, Izquierda, Derecha)",
+      },
+      { key: "[Espacio] / [P]", action: "Pausar cabina" },
     ],
     powerups: [
       {
-        name: "CHRONO SLOWDOWN",
+        name: "FRUTAS LEGENDARIAS",
         color: "border-primary-container text-primary-container",
         description:
-          "Ralentiza la frecuencia de la cuadrícula durante 5 segundos.",
+          "Sandías, piñas y melones otorgan 500 puntos de bonificación.",
       },
     ],
   },

@@ -1,6 +1,6 @@
 # Spec 09: Creación del Juego Chrono Snake con Sprites de Frutas en Cabina CRT
 
-**Estado:** Aprobado  
+**Estado:** Implementado  
 **Fecha:** 2026-10-26  
 **Depende de:** 06-adaptacion-juego-asteroids.md, 07-leaderboard-y-tabla-de-juegos.md
 
@@ -191,18 +191,18 @@ export interface SnakeGameState {
 
 ## Criterios de Aceptación
 
-- [ ] Archivo de especificación guardado en `specs/09-creacion-chrono-snake.md`.
-- [ ] La imagen `fruits.png` se sirve desde `public/games/snake/fruits.png` y se recortan correctamente los 22 tipos de frutas.
-- [ ] El canvas opera a 800x600 px dentro de `CrtCabinet` sin scrollbars ni desproporción visual.
-- [ ] Ningún elemento de texto HUD (Score, Level, Vidas, Game Over) se dibuja en el canvas; se delegan a `CabinetGameProps`.
-- [ ] La serpiente inicia con 1 vida, longitud de 3 segmentos y se desplaza con teclas `Flechas` y `WASD`.
-- [ ] La serpiente muere inmediatamente al colisionar con los bordes de la pantalla (muros sólidos) o con su propio cuerpo.
-- [ ] Comer frutas incrementa el tamaño de la serpiente, añade el puntaje correspondiente a la fruta y genera chispas neón.
-- [ ] Cada 5 frutas el nivel avanza y la velocidad de desplazamiento aumenta.
-- [ ] Al perder, se llama a `onGameOver(finalScore)` y se despliega `GameRoomOverlay`.
-- [ ] El botón de reinicio (`restartSignal`) y la pausa (`isPaused`) responden de inmediato y de forma predecible.
-- [ ] `chrono-snake` está disponible en la cabina `/games/chrono-snake/play` y cartuchos de `/leaderboard`.
-- [ ] `npm run lint` y `npm run build` finalizan con código de salida 0.
+- [x] Archivo de especificación guardado en `specs/09-creacion-chrono-snake.md`.
+- [x] La imagen `fruits.png` se sirve desde `public/games/snake/fruits.png` y se recortan correctamente los 22 tipos de frutas.
+- [x] El canvas opera a 800x600 px dentro de `CrtCabinet` sin scrollbars ni desproporción visual.
+- [x] Ningún elemento de texto HUD (Score, Level, Vidas, Game Over) se dibuja en el canvas; se delegan a `CabinetGameProps`.
+- [x] La serpiente inicia con 1 vida, longitud de 3 segmentos y se desplaza con teclas `Flechas` y `WASD`.
+- [x] La serpiente muere inmediatamente al colisionar con los bordes de la pantalla (muros sólidos) o con su propio cuerpo.
+- [x] Comer frutas incrementa el tamaño de la serpiente, añade el puntaje correspondiente a la fruta y genera chispas neón.
+- [x] Cada 5 frutas el nivel avanza y la velocidad de desplazamiento aumenta.
+- [x] Al perder, se llama a `onGameOver(finalScore)` y se despliega `GameRoomOverlay`.
+- [x] El botón de reinicio (`restartSignal`) y la pausa (`isPaused`) responden de inmediato y de forma predecible.
+- [x] `chrono-snake` está disponible en la cabina `/games/chrono-snake/play` y cartuchos de `/leaderboard`.
+- [x] `npm run lint` y `npm run build` finalizan con código de salida 0.
 
 ---
 
