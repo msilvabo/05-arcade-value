@@ -140,7 +140,7 @@ export const LeaderboardClient: FC<LeaderboardClientProps> = ({
             entries={entries}
             selectedGame={selectedGame}
             onSelectGame={handleSelectGame}
-            games={initialGames}
+
             isLoading={isPending}
           />
         </div>

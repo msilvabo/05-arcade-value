@@ -223,7 +223,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
             </div>
 
             {/* Mensajes de Confirmación o Error */}
-            {saved && (
+            {isSaved && (
               <div className="mt-2.5 p-2 bg-tertiary-container/20 rounded border border-tertiary-container/40 flex items-center justify-between gap-2">
                 <span className="text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wider font-bold">
                   ✓ ¡PUNTUACIÓN PUBLICADA EN EL SALÓN DE LA FAMA!
@@ -234,12 +234,6 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
                 >
                   VER TABLA
                 </Link>
-              </div>
-            )}
-
-            {errorMessage && (
-              <div className="mt-2 text-error font-label-sm text-label-sm uppercase tracking-wider">
-                ⚠ {errorMessage}
               </div>
             )}
           </div>

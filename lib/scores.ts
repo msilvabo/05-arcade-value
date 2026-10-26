@@ -56,8 +56,7 @@ export function getHighScore(gameId: string, fallbackDefault = 0): number {
  */
 export async function saveGameScore(
   gameId: string,
-  score: number,
-  playerName?: string
+  score: number
 ): Promise<HighScoreResult> {
   const canonicalId = toCanonicalGameId(gameId);
   let isNewRecord = false;
