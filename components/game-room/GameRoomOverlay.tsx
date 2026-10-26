@@ -221,6 +221,27 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
                 MÃX. 15 CARACTERES (LETRAS, NÃšMEROS Y GUIONES)
               </span>
             </div>
+
+            {/* Mensajes de Confirmación o Error */}
+            {saved && (
+              <div className="mt-2.5 p-2 bg-tertiary-container/20 rounded border border-tertiary-container/40 flex items-center justify-between gap-2">
+                <span className="text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wider font-bold">
+                  ✓ ¡PUNTUACIÓN PUBLICADA EN EL SALÓN DE LA FAMA!
+                </span>
+                <Link
+                  href="/leaderboard"
+                  className="px-2.5 py-1 bg-tertiary-container text-on-tertiary rounded text-[11px] font-label-sm font-bold uppercase tracking-wider hover:bg-white transition-colors"
+                >
+                  VER TABLA
+                </Link>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="mt-2 text-error font-label-sm text-label-sm uppercase tracking-wider">
+                ⚠ {errorMessage}
+              </div>
+            )}
           </div>
 
           {/* Mensaje de Estado / Feedback */}
@@ -277,7 +298,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
               </button>
 
               <Link
-                href="/"
+                href="/leaderboard"
                 className="py-3 bg-surface-container-highest hover:bg-surface-bright text-on-surface font-title-sm text-title-sm uppercase tracking-wider rounded transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5 text-center border border-outline-variant/30"
               >
                 <span className="material-symbols-outlined text-[20px]">

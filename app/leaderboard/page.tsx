@@ -1,4 +1,20 @@
-"use client";
+import { Metadata } from "next";
+import { Suspense } from "react";
+import { getGames } from "@/lib/services/games";
+import { getLeaderboardEntries } from "@/lib/services/leaderboard";
+import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
+
+export const metadata: Metadata = {
+  title: "Salón de la Fama // Leaderboard // Arcade Vault",
+  description:
+    "Registro oficial de maestría coin-op y récords arcade mundiales.",
+};
+
+async function LeaderboardContent() {
+  const [games, initialEntries] = await Promise.all([
+    getGames(),
+    getLeaderboardEntries(),
+  ]);
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -172,10 +188,10 @@ function LeaderboardContent() {
             isLoading={isLoading}
           />
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      }
+    >
+      <LeaderboardContent />
+    </Suspense>
   );
 }
 

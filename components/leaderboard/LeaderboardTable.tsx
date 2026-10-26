@@ -171,7 +171,15 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
       </div>
 
       {/* Tabla Completa Top 10 */}
-      <div className="bg-surface-container-low rounded-lg p-space-md border border-outline-variant/30 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+      <div className="bg-surface-container-low rounded-lg p-space-md border border-outline-variant/30 shadow-[0_0_20px_rgba(0,0,0,0.5)] relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-surface/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg">
+            <span className="font-headline-sm text-headline-sm text-primary animate-pulse tracking-widest uppercase">
+              SINCRONIZANDO TELEMETRÍA...
+            </span>
+          </div>
+        )}
+
         {/* Cabecera y Buscador */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md mb-space-md pb-space-sm border-b border-outline-variant/30">
           <div className="flex items-center gap-space-xs">
