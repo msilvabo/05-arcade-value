@@ -3,10 +3,13 @@
 import { FC, useState, useEffect } from "react";
 import { GameRoomHud } from "@/components/game-room/GameRoomHud";
 import { CrtCabinet } from "@/components/game-room/CrtCabinet";
-import { ArkanoidPresentation } from "@/components/game-room/ArkanoidPresentation";
-import { AsteroidsGame } from "@/components/game-room/AsteroidsGame";
 import { GameRoomOverlay } from "@/components/game-room/GameRoomOverlay";
 import { getHighScore, saveGameScore } from "@/lib/scores";
+import {
+  CabinetGameHost,
+  hasGameCabinetComponent,
+  getGameConfig,
+} from "@/app/games/_lib/registry";
 
 interface PlayRoomClientProps {
   gameId: string;
@@ -14,25 +17,54 @@ interface PlayRoomClientProps {
 
 export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const isAsteroids = gameId === "asteroids-2084" || gameId === "asteroids";
+  const gameConfig = getGameConfig(gameId);
+  const hasGame = hasGameCabinetComponent(gameId);
 
   const [score, setScore] = useState<number>(0);
   const [highScore, setHighScore] = useState<number>(() =>
     getHighScore(gameId, isAsteroids ? 231800 : 142500)
   );
+  const [prevGameId, setPrevGameId] = useState<string>(gameId);
+  if (prevGameId !== gameId) {
+    setPrevGameId(gameId);
+    setHighScore(getHighScore(gameId, isAsteroids ? 231800 : 142500));
+  }
+
   const [lives, setLives] = useState<number>(3);
   const [level, setLevel] = useState<number>(1);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [audioOn, setAudioOn] = useState<boolean>(true);
+  const [volume, setVolume] = useState<number>(0.7);
   const [scanlinesActive, setScanlinesActive] = useState<boolean>(true);
   const [curvatureActive, setCurvatureActive] = useState<boolean>(true);
   const [restartSignal, setRestartSignal] = useState<number>(0);
 
+  // Escuchar teclado para pausar (Escape / P) y silenciar (M) a nivel cabina
   useEffect(() => {
-    const saved = getHighScore(gameId, isAsteroids ? 231800 : 142500);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHighScore(saved);
-  }, [gameId, isAsteroids]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement &&
+        (document.activeElement.tagName === "INPUT" ||
+          document.activeElement.tagName === "TEXTAREA")
+      ) {
+        return;
+      }
+
+      if (e.key === "Escape" || e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        if (!isGameOver) {
+          setIsPaused((prev) => !prev);
+        }
+      } else if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        setAudioOn((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isGameOver]);
 
   const handleScoreIncrement = (pts: number) => {
     setScore((prev) => prev + pts);
@@ -61,7 +93,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
 
   const levelLabel = isAsteroids
     ? `NV. ${String(level).padStart(2, "0")}: CINTURÓN VECTOR`
-    : "NV. 04: MATRIZ NEÓN";
+    : `NV. ${String(level).padStart(2, "0")}: MATRIZ NEÓN`;
 
   return (
     <div className="flex flex-col min-h-screen bg-surface select-none">
@@ -75,6 +107,8 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
         onTogglePause={() => setIsPaused((prev) => !prev)}
         audioOn={audioOn}
         onToggleAudio={() => setAudioOn((prev) => !prev)}
+        volume={volume}
+        onVolumeChange={setVolume}
         gameId={gameId}
       />
 
@@ -90,20 +124,36 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
             scanlinesActive={scanlinesActive}
             curvatureActive={curvatureActive}
           >
-            {isAsteroids ? (
-              <AsteroidsGame
-                isPaused={isPaused || isGameOver}
-                onScoreChange={handleScoreChange}
-                onLivesChange={(l) => setLives(l)}
-                onLevelChange={(lvl) => setLevel(lvl)}
-                onGameOver={handleGameOver}
-                restartSignal={restartSignal}
+            {hasGame ? (
+              <CabinetGameHost
+                gameId={gameId}
+                gameProps={{
+                  isPaused: isPaused || isGameOver,
+                  onScoreIncrement: handleScoreIncrement,
+                  onScoreChange: handleScoreChange,
+                  onLivesChange: (l) => setLives(l),
+                  onLevelChange: (lvl) => setLevel(lvl),
+                  onGameOver: handleGameOver,
+                  restartSignal: restartSignal,
+                  audioOn: audioOn,
+                  volume: volume,
+                }}
               />
             ) : (
-              <ArkanoidPresentation
-                isPaused={isPaused || isGameOver}
-                onScoreIncrement={handleScoreIncrement}
-              />
+              <div className="relative w-full h-[520px] bg-surface-container-lowest flex flex-col items-center justify-center text-center p-6">
+                <span className="material-symbols-outlined text-[64px] text-tertiary animate-pulse mb-4">
+                  build_circle
+                </span>
+                <h3 className="font-display-md text-display-md text-primary tracking-widest uppercase mb-2">
+                  {gameConfig.title}
+                </h3>
+                <p className="font-headline-md text-secondary-container tracking-wider uppercase mb-4">
+                  CABINA EN MANTENIMIENTO {"//"} PRÓXIMAMENTE
+                </p>
+                <p className="font-body-md text-on-surface-variant max-w-md">
+                  {gameConfig.missionLog.story}
+                </p>
+              </div>
             )}
 
             {/* Modales de Pausa y Game Over */}
@@ -174,71 +224,19 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
 
         {/* Guía de Control para el Jugador */}
         <div className="w-full max-w-4xl mt-space-md grid grid-cols-1 md:grid-cols-3 gap-space-sm text-center">
-          {isAsteroids ? (
-            <>
-              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-                  arrow_back
-                </span>
-                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-                  arrow_forward
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-                  FLECHAS / A-D: ROTAR NAVE
-                </span>
-              </div>
-
-              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-                  arrow_upward
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-                  FLECHA ARRIBA / W: PROPULSAR
-                </span>
-              </div>
-
-              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-                <span className="px-2 py-0.5 bg-surface-container-high text-tertiary font-label-sm text-label-sm rounded uppercase font-bold">
-                  ESPACIO
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-                  DISPARAR CAÑONES
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-                  arrow_back
-                </span>
-                <span className="material-symbols-outlined text-primary-fixed text-[18px]">
-                  arrow_forward
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-                  FLECHAS / RATÓN: MOVER VAUS
-                </span>
-              </div>
-
-              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-                <span className="px-2 py-0.5 bg-surface-container-high text-tertiary font-label-sm text-label-sm rounded uppercase font-bold">
-                  ESPACIO
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-                  LANZAR BOLA / LÁSER
-                </span>
-              </div>
-
-              <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30">
-                <span className="px-2 py-0.5 bg-surface-container-high text-secondary font-label-sm text-label-sm rounded uppercase font-bold">
-                  P
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
-                  PAUSAR SIMULACIÓN
-                </span>
-              </div>
-            </>
-          )}
+          {gameConfig.missionLog.controls.slice(0, 3).map((ctrl, idx) => (
+            <div
+              key={idx}
+              className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-outline-variant/30"
+            >
+              <span className="px-2 py-0.5 bg-surface-container-high text-primary-fixed font-label-sm text-label-sm rounded uppercase font-bold">
+                {ctrl.key}
+              </span>
+              <span className="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">
+                {ctrl.action}
+              </span>
+            </div>
+          ))}
         </div>
       </main>
 
@@ -248,12 +246,13 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
           <div className="flex items-center gap-space-sm justify-center md:justify-start">
             <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_rgba(0,245,255,0.8)]"></span>
             <span className="text-on-surface uppercase tracking-wider">
-              CABINA: AR-VAULT-42 // V-SYNC BLOQUEADO // LATENCIA: 0.8MS
+              CABINA: {gameConfig.cabinetNumber} {"//"} V-SYNC BLOQUEADO {"//"}{" "}
+              LATENCIA: 0.8MS
             </span>
           </div>
           <div className="flex items-center gap-space-md justify-center md:justify-end text-outline-variant">
             <span>MODO COMPETICIÓN ACTIVO</span>
-            <span>ROM EMULATOR REV.84</span>
+            <span>{gameConfig.version}</span>
           </div>
         </div>
       </footer>

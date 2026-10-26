@@ -2,22 +2,14 @@
 
 import { FC, useState, useMemo } from "react";
 import { LeaderboardEntry, LeaderboardPeriod } from "@/types/leaderboard";
-import { Game } from "@/types/game";
-
-const ICON_MAP: Record<string, string> = {
-  arkanoid: "sports_baseball",
-  tetris: "grid_view",
-  "space-invaders": "rocket_launch",
-  pacman: "motion_photos_on",
-  snake: "gesture",
-  asteroids: "change_history",
-};
+import { getLeaderboardCartridges } from "@/app/games/_lib/registry";
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   selectedGame: string;
   onSelectGame: (gameId: string) => void;
-  games?: Game[];
+  period?: LeaderboardPeriod;
+  onSelectPeriod?: (period: LeaderboardPeriod) => void;
   isLoading?: boolean;
 }
 
@@ -25,56 +17,23 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
   entries,
   selectedGame,
   onSelectGame,
-  games,
+  period = "all-time",
+  onSelectPeriod,
   isLoading = false,
 }) => {
-  const [period, setPeriod] = useState<LeaderboardPeriod>("all-time");
+  const [localPeriod, setLocalPeriod] = useState<LeaderboardPeriod>(period);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const gamesList = useMemo(() => {
-    if (games && games.length > 0) {
-      return games.map((game) => ({
-        id: game.id,
-        name: game.title.split(":")[0].replace(/^(CYBER|CHRONO|SPACE)\s+/, ""),
-        icon: ICON_MAP[game.artType] || "videogame_asset",
-        record: game.record?.score?.replace(" PTS", "") || "---",
-      }));
+  const currentPeriod = onSelectPeriod ? period : localPeriod;
+  const handlePeriodChange = (p: LeaderboardPeriod) => {
+    if (onSelectPeriod) {
+      onSelectPeriod(p);
+    } else {
+      setLocalPeriod(p);
     }
+  };
 
-    return [
-      {
-        id: "arkanoid-neon-revenge",
-        name: "ARKANOID",
-        icon: "sports_baseball",
-        record: "984.520",
-      },
-      {
-        id: "cyber-tetris-99",
-        name: "TETRIS",
-        icon: "grid_view",
-        record: "842.100",
-      },
-      {
-        id: "space-invaders-galaxy",
-        name: "INVADERS",
-        icon: "rocket_launch",
-        record: "620.000",
-      },
-      {
-        id: "pacman-neon-maze",
-        name: "PAC-MAN",
-        icon: "motion_photos_on",
-        record: "3.333.360",
-      },
-      { id: "chrono-snake", name: "SNAKE", icon: "gesture", record: "450.800" },
-      {
-        id: "asteroids-2084",
-        name: "ASTEROIDS",
-        icon: "change_history",
-        record: "510.900",
-      },
-    ];
-  }, [games]);
+  const gamesList = useMemo(() => getLeaderboardCartridges(), []);
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
@@ -102,9 +61,9 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
           <div className="flex items-center gap-space-xs bg-surface-container-lowest p-1 rounded">
             <button
               type="button"
-              onClick={() => setPeriod("all-time")}
+              onClick={() => handlePeriodChange("all-time")}
               className={`px-space-md py-space-xs rounded font-label-sm text-label-sm uppercase tracking-wider transition-all cursor-pointer ${
-                period === "all-time"
+                currentPeriod === "all-time"
                   ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(0,245,255,0.7)]"
                   : "bg-surface-container text-on-surface-variant hover:text-on-surface"
               }`}
@@ -113,25 +72,25 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setPeriod("monthly")}
+              onClick={() => handlePeriodChange("monthly")}
               className={`px-space-md py-space-xs rounded font-label-sm text-label-sm uppercase tracking-wider transition-all cursor-pointer ${
-                period === "monthly"
+                currentPeriod === "monthly"
                   ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(0,245,255,0.7)]"
                   : "bg-surface-container text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              TEMPORADA ACTUAL (OCTUBRE)
+              ESTE MES
             </button>
             <button
               type="button"
-              onClick={() => setPeriod("weekly")}
+              onClick={() => handlePeriodChange("weekly")}
               className={`px-space-md py-space-xs rounded font-label-sm text-label-sm uppercase tracking-wider transition-all cursor-pointer ${
-                period === "weekly"
+                currentPeriod === "weekly"
                   ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(0,245,255,0.7)]"
                   : "bg-surface-container text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              HOY
+              ESTA SEMANA
             </button>
           </div>
         </div>
@@ -141,8 +100,20 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
           {gamesList.map((game, idx) => {
             const isSelected =
               selectedGame === game.id ||
-              selectedGame.startsWith(game.id) ||
-              game.id.startsWith(selectedGame);
+              selectedGame
+                .replace("-2084", "")
+                .replace("-neon-revenge", "")
+                .replace("cyber-", "")
+                .replace("-99", "")
+                .replace("-galaxy", "")
+                .replace("-maze", "") ===
+                game.id
+                  .replace("-2084", "")
+                  .replace("-neon-revenge", "")
+                  .replace("cyber-", "")
+                  .replace("-99", "")
+                  .replace("-galaxy", "")
+                  .replace("-maze", "");
 
             return (
               <button
@@ -216,7 +187,7 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
               leaderboard
             </span>
             <h2 className="font-headline-md text-headline-md uppercase text-on-surface tracking-wider">
-              CLASIFICACIÓN // {filteredEntries.length} PILOTOS REGISTRADOS
+              CLASIFICACIÓN COMPLETA // SUPABASE ARCHIVE
             </h2>
           </div>
 
@@ -236,64 +207,89 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
 
         {/* Tabla Responsiva */}
         <div className="overflow-x-auto">
-          {filteredEntries.length === 0 ? (
-            <div className="py-space-xl text-center text-outline font-label-md text-label-md uppercase tracking-wider">
-              NO SE ENCONTRARON PUNTUACIONES REGISTRADAS PARA ESTE CRITERIO
-            </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-outline-variant/40 text-outline font-label-sm text-label-sm uppercase tracking-wider">
-                  <th className="py-space-sm px-space-md">RANGO</th>
-                  <th className="py-space-sm px-space-md">
-                    PILOTO // GAMERTAG
-                  </th>
-                  <th className="py-space-sm px-space-md text-right">
-                    PUNTUACIÓN
-                  </th>
-                  <th className="py-space-sm px-space-md text-center">
-                    PRECISIÓN
-                  </th>
-                  <th className="py-space-sm px-space-md text-center">COMBO</th>
-                  <th className="py-space-sm px-space-md text-right hidden sm:table-cell">
-                    FECHA
-                  </th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-outline-variant/40 text-outline font-label-sm text-label-sm uppercase tracking-wider">
+                <th className="py-space-sm px-space-md">RANGO</th>
+                <th className="py-space-sm px-space-md">PILOTO // GAMERTAG</th>
+                <th className="py-space-sm px-space-md text-right">
+                  PUNTUACIÓN
+                </th>
+                <th className="py-space-sm px-space-md text-center">
+                  PRECISIÓN
+                </th>
+                <th className="py-space-sm px-space-md text-center">COMBO</th>
+                <th className="py-space-sm px-space-md text-right hidden sm:table-cell">
+                  FECHA REGISTRO
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-primary animate-pulse font-headline-md"
+                  >
+                    SINCRONIZANDO MARCAS CON SUPABASE...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/20 font-body-md text-body-md">
-                {filteredEntries.map((entry) => {
-                  const isChampion = entry.rank === 1;
+              ) : filteredEntries.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-on-surface-variant font-body-md"
+                  >
+                    No se encontraron puntuaciones registradas para este filtro.
+                    ¡Sé el primero en jugar!
+                  </td>
+                </tr>
+              ) : (
+                filteredEntries.map((entry) => {
                   const isTop3 = entry.rank <= 3;
+                  const isChampion = entry.rank === 1;
+
                   return (
                     <tr
-                      key={`${entry.gameId}-${entry.gamerTag}-${entry.rank}`}
-                      className={`transition-colors hover:bg-surface-container group ${
+                      key={`${entry.gameId}-${entry.rank}-${entry.gamerTag}-${entry.score}`}
+                      className={`border-b border-outline-variant/20 hover:bg-surface-container transition-colors group ${
                         isChampion
-                          ? "bg-primary-container/10 font-bold"
+                          ? "bg-tertiary-container/10"
                           : isTop3
-                            ? "bg-surface-container-high/40"
+                            ? "bg-surface-container-lowest/50"
                             : ""
                       }`}
                     >
                       {/* Rango */}
                       <td className="py-space-sm px-space-md whitespace-nowrap">
-                        <div className="flex items-center gap-space-xs">
-                          <span
-                            className={`w-7 h-7 rounded flex items-center justify-center font-label-md text-label-md font-bold ${
-                              entry.rank === 1
-                                ? "bg-tertiary-container text-on-tertiary shadow-[0_0_8px_rgba(222,231,0,0.8)]"
-                                : entry.rank === 2
-                                  ? "bg-secondary-fixed text-on-secondary-fixed shadow-[0_0_8px_rgba(255,178,191,0.5)]"
-                                  : entry.rank === 3
-                                    ? "bg-tertiary text-on-tertiary"
-                                    : "bg-surface-container-highest text-outline"
-                            }`}
-                          >
-                            {entry.rank < 10 ? `0${entry.rank}` : entry.rank}
-                          </span>
-                          {isChampion && (
-                            <span className="material-symbols-outlined text-tertiary-fixed text-[18px]">
-                              crown
+                        <div className="flex items-center gap-space-xs font-label-md text-label-md">
+                          {entry.rank === 1 && (
+                            <span className="text-tertiary-fixed font-bold flex items-center gap-1 drop-shadow-[0_0_8px_rgba(227,236,0,0.8)]">
+                              <span className="material-symbols-outlined text-[18px]">
+                                crown
+                              </span>
+                              #01
+                            </span>
+                          )}
+                          {entry.rank === 2 && (
+                            <span className="text-secondary-fixed font-bold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[18px]">
+                                military_tech
+                              </span>
+                              #02
+                            </span>
+                          )}
+                          {entry.rank === 3 && (
+                            <span className="text-tertiary-fixed font-bold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[18px]">
+                                emoji_events
+                              </span>
+                              #03
+                            </span>
+                          )}
+                          {entry.rank > 3 && (
+                            <span className="text-outline font-bold">
+                              #{String(entry.rank).padStart(2, "0")}
                             </span>
                           )}
                         </div>
@@ -350,10 +346,10 @@ export const LeaderboardTable: FC<LeaderboardTableProps> = ({
                       </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          )}
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

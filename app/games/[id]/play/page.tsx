@@ -1,20 +1,23 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { PlayRoomClient } from "@/components/game-room/PlayRoomClient";
-import { GAMES } from "@/data/games";
+import { getAvailableGameIds, getGameConfig } from "@/app/games/_lib/registry";
 
 export function generateStaticParams() {
-  return GAMES.map((g) => ({ id: g.id }));
+  return getAvailableGameIds().map((id) => ({ id }));
 }
 
 interface PlayPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PlayPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PlayPageProps): Promise<Metadata> {
   const { id } = await params;
+  const game = getGameConfig(id);
   return {
-    title: `Jugando // ${id.toUpperCase()} // Arcade Vault`,
+    title: `Jugando // ${game.title} // Arcade Vault`,
     description: "Cabina de juego retro CRT con controles y simulación activa.",
   };
 }

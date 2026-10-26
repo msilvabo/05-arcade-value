@@ -1,3 +1,7 @@
+-- ============================================================================
+-- Migración Base: Esquema Relacional de Profiles, Games y Scores (Spec 07)
+-- ============================================================================
+
 -- 1. Perfiles de usuario vinculados a auth.users
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -7,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Trigger para crear perfil automático al registrarse un usuario
+-- Trigger para crear perfil automático al registrarse
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
@@ -16,11 +20,7 @@ BEGIN
     new.id,
     COALESCE(new.raw_user_meta_data->>'gamer_tag', 'PLAYER_' || substring(new.id::text, 1, 6)),
     COALESCE(new.raw_user_meta_data->>'avatar_url', '')
-  )
-  ON CONFLICT (id) DO UPDATE SET
-    gamer_tag = EXCLUDED.gamer_tag,
-    avatar_url = EXCLUDED.avatar_url,
-    updated_at = timezone('utc'::text, now());
+  );
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -46,11 +46,10 @@ CREATE TABLE IF NOT EXISTS public.games (
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. Tabla de Puntuaciones Históricas (Soporta usuarios autenticados e invitados con nickname libre)
+-- 3. Tabla de Puntuaciones Históricas
 CREATE TABLE IF NOT EXISTS public.scores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-  player_name TEXT,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   game_id TEXT NOT NULL REFERENCES public.games(id) ON DELETE CASCADE,
   score INTEGER NOT NULL CHECK (score >= 0),
   accuracy TEXT DEFAULT '100%',
@@ -67,25 +66,71 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.games ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scores ENABLE ROW LEVEL SECURITY;
 
--- Políticas de RLS para profiles
-DROP POLICY IF EXISTS "Lectura pública de perfiles" ON public.profiles;
-CREATE POLICY "Lectura pública de perfiles" ON public.profiles 
-  FOR SELECT USING (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Lectura pública de perfiles') THEN
+    CREATE POLICY "Lectura pública de perfiles" ON public.profiles FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Usuarios pueden actualizar su propio perfil') THEN
+    CREATE POLICY "Usuarios pueden actualizar su propio perfil" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+  END IF;
 
-DROP POLICY IF EXISTS "Usuarios pueden actualizar su propio perfil" ON public.profiles;
-CREATE POLICY "Usuarios pueden actualizar su propio perfil" ON public.profiles 
-  FOR UPDATE USING (auth.uid() = id);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'games' AND policyname = 'Lectura pública de juegos') THEN
+    CREATE POLICY "Lectura pública de juegos" ON public.games FOR SELECT USING (true);
+  END IF;
 
--- Políticas de RLS para games
-DROP POLICY IF EXISTS "Lectura pública de juegos" ON public.games;
-CREATE POLICY "Lectura pública de juegos" ON public.games 
-  FOR SELECT USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'scores' AND policyname = 'Lectura pública de puntuaciones') THEN
+    CREATE POLICY "Lectura pública de puntuaciones" ON public.scores FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'scores' AND policyname = 'Usuarios autenticados pueden registrar puntuaciones') THEN
+    CREATE POLICY "Usuarios autenticados pueden registrar puntuaciones" ON public.scores FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
--- Políticas de RLS para scores
-DROP POLICY IF EXISTS "Lectura pública de puntuaciones" ON public.scores;
-CREATE POLICY "Lectura pública de puntuaciones" ON public.scores 
-  FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Permitir registro libre de puntuaciones" ON public.scores;
-CREATE POLICY "Permitir registro libre de puntuaciones" ON public.scores 
-  FOR INSERT WITH CHECK (true);
+-- 4. Sembrado de Juegos del Catálogo Oficial
+INSERT INTO public.games (id, title, category, category_keys, year, description, badge, badge_variant, difficulty, art_type, plays_count)
+VALUES
+  (
+    'cyber-tetris-99',
+    'CYBER TETRIS 99',
+    'PUZZLE ESTRATÉGICO',
+    ARRAY['puzzle', 'classics-80s', 'popular'],
+    1984,
+    'Encaja las matrices cuánticas antes de que el muro sature el búfer del sistema.',
+    'MÁS POPULAR',
+    'primary',
+    'NORMAL',
+    'tetris',
+    48000
+  ),
+  (
+    'asteroids-2084',
+    'ASTEROIDS 2084',
+    'SHOOT ''EM UP ESPACIAL',
+    ARRAY['shoot-em-up', 'classics-80s', 'vector'],
+    1979,
+    'Sobrevive al cinturón de escombros cósmicos con física de inercia y armas de dispersión.',
+    'CLÁSICO VECTOR',
+    'secondary',
+    'DIFÍCIL',
+    'asteroids',
+    34200
+  ),
+  (
+    'arkanoid-neon-revenge',
+    'ARKANOID: NEON REVENGE',
+    'ACTION BREAKOUT',
+    ARRAY['breakout', 'classics-80s'],
+    1986,
+    'Destruye barreras de neón con la nave Vaus y recoge cápsulas energéticas cuánticas.',
+    'DESTACADO',
+    'primary',
+    'NORMAL',
+    'arkanoid',
+    51200
+  )
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  category = EXCLUDED.category,
+  category_keys = EXCLUDED.category_keys,
+  description = EXCLUDED.description,
+  badge = EXCLUDED.badge;

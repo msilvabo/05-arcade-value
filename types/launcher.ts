@@ -25,5 +25,6 @@ export interface GameExtendedDetails {
   recordHolder: string;
   activePlayers: number;
   cabinetNumber: string;
+  materialIcon?: string;
   missionLog: GameMissionLog;
 }

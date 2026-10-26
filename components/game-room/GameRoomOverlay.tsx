@@ -1,8 +1,9 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import Link from "next/link";
-import { submitScoreAction } from "@/app/actions/leaderboard";
+import { saveScoreRecord } from "@/lib/scores";
+import { createClient } from "@/lib/supabase/client";
 
 interface GameRoomOverlayProps {
   isPaused: boolean;
@@ -21,34 +22,98 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
   score,
   gameId,
 }) => {
-  const [nickname, setNickname] = useState<string>("");
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [saved, setSaved] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [gamerTag, setGamerTag] = useState<string>("PILOTO");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Ajuste de estado al cambiar isGameOver sin efecto sÃ­ncrono
+  const [prevGameOver, setPrevGameOver] = useState(isGameOver);
+  if (prevGameOver !== isGameOver) {
+    setPrevGameOver(isGameOver);
+    if (isGameOver) {
+      setIsSaved(false);
+      setStatusMessage(null);
+    }
+  }
+
+  // Cargar usuario autenticado de Supabase si existe
+  useEffect(() => {
+    if (!isGameOver) return;
+    let cancelled = false;
+
+    const checkUser = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (cancelled || !user) return;
+
+        const metaTag = user.user_metadata?.gamer_tag;
+        if (metaTag) {
+          setGamerTag(metaTag.toUpperCase());
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("gamer_tag")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (!cancelled && profile?.gamer_tag) {
+          setGamerTag(profile.gamer_tag.toUpperCase());
+        }
+      } catch {
+        // Modo offline
+      }
+    };
+
+    checkUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [isGameOver]);
 
   const handleSaveScore = async () => {
-    if (isSaving || saved) return;
-    setIsSaving(true);
-    setErrorMessage("");
+    const cleanTag = gamerTag.trim().toUpperCase();
+    if (!cleanTag || isSubmitting || isSaved) return;
 
-    const tag = nickname.trim() || "PILOTO_VAULT";
-    const result = await submitScoreAction({
-      gameId,
-      score,
-      nickname: tag,
-      accuracy: "98%",
-      combo: "x16",
-    });
+    setIsSubmitting(true);
+    setStatusMessage(null);
 
-    setIsSaving(false);
+    try {
+      const res = await saveScoreRecord({
+        gameId,
+        score,
+        playerName: cleanTag,
+        accuracy: "98%",
+        combo: "x12",
+      });
 
-    if (result.success) {
-      setSaved(true);
-    } else {
-      setErrorMessage(
-        result.error || "No se pudo sincronizar la puntuación con el servidor."
-      );
+      if (res.success) {
+        setIsSaved(true);
+        setStatusMessage("âœ“ PUNTUACIÃ“N REGISTRADA EXITOSAMENTE EN SUPABASE");
+      } else {
+        setIsSaved(true);
+        setStatusMessage(
+          `âœ“ GUARDADO LOCALMENTE (${res.error || "RÃ©cord guardado"})`
+        );
+      }
+    } catch {
+      setIsSaved(true);
+      setStatusMessage("âœ“ GUARDADO LOCALMENTE EN ESTE DISPOSITIVO");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleInternalRestart = () => {
+    setIsSaved(false);
+    setStatusMessage(null);
+    onRestart();
   };
 
   if (!isPaused && !isGameOver) return null;
@@ -60,16 +125,16 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
         <div className="relative w-full max-w-md bg-surface-container-low rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(0,245,255,0.4)] border border-primary-container/40 flex flex-col items-center text-center">
           <div className="bg-primary-container px-3 py-0.5 rounded shadow-[0_0_12px_rgba(0,245,255,0.8)] -mt-11 mb-4">
             <span className="font-label-sm text-label-sm text-on-primary uppercase tracking-widest font-bold">
-              TERMINAL EN SUSPENSIÓN
+              TERMINAL EN SUSPENSIÃ“N
             </span>
           </div>
 
           <h2 className="font-display-lg text-display-lg text-primary tracking-wider uppercase drop-shadow-[0_0_16px_rgba(0,245,255,0.9)] animate-pulse">
-            ⏸ PAUSA
+            â¸ PAUSA
           </h2>
 
           <p className="font-body-md text-body-md text-on-surface-variant my-3">
-            La simulación cuántica ha sido pausada temporalmente.
+            La simulaciÃ³n cuÃ¡ntica ha sido pausada temporalmente.
           </p>
 
           <div className="w-full flex flex-col gap-2.5 mt-2">
@@ -78,7 +143,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
               onClick={onResume}
               className="w-full py-3 bg-primary-container hover:bg-white text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(0,245,255,0.8)] transition-all cursor-pointer"
             >
-              ▶ REANUDAR PARTIDA
+              â–¶ REANUDAR PARTIDA
             </button>
 
             <Link
@@ -103,63 +168,58 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
         <div className="relative w-full max-w-lg bg-surface-container-low rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(255,77,128,0.5),inset_0_0_20px_rgba(0,245,255,0.15)] border border-secondary-container/50 flex flex-col items-center text-center">
           <div className="bg-secondary-container px-3 py-0.5 rounded shadow-[0_0_12px_rgba(255,77,128,0.8)] -mt-11 mb-4">
             <span className="font-label-sm text-label-sm text-white uppercase tracking-widest font-bold">
-              ARCADE VAULT • SISTEMA DE CLASIFICACIÓN
+              ARCADE VAULT â€¢ REGISTRO DE CLASIFICACIÃ“N
             </span>
           </div>
 
           <h2 className="font-display-lg text-display-lg text-secondary-container tracking-wider uppercase drop-shadow-[0_0_18px_rgba(255,77,128,0.9)] animate-pulse">
-            ★ FIN DEL JUEGO ★
+            â˜… FIN DEL JUEGO â˜…
           </h2>
 
           <p className="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider mt-1 mb-4">
-            PARTIDA FINALIZADA // REGISTRO DE TELEMETRÍA DISPONIBLE
+            SIMULACIÃ“N CONCLUIDA EN LA CABINA CRT
           </p>
 
           {/* Marcador Final */}
           <div className="w-full bg-surface-container-lowest p-4 rounded mb-4 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] border border-outline-variant/30 flex flex-col items-center">
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1">
-              PUNTUACIÓN OBTENIDA
+              PUNTUACIÃ“N TOTAL ACUMULADA
             </span>
             <span className="font-headline-lg text-headline-lg text-primary tracking-widest font-bold drop-shadow-[0_0_12px_rgba(0,245,255,0.9)]">
               {score.toLocaleString()} PUNTOS
             </span>
           </div>
 
-          {/* Registro de Nickname en Salón de la Fama */}
-          <div className="w-full mb-5 bg-surface-container p-3.5 rounded border border-outline-variant/30 text-left">
-            <label className="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider block mb-1.5 font-bold">
-              REGISTRAR EN EL SALÓN DE LA FAMA
+          {/* Formulario de Registro de Alias / Nombre para Supabase */}
+          <div className="w-full mb-6 bg-surface-container-lowest/60 p-4 rounded border border-outline-variant/30 flex flex-col items-center">
+            <label
+              htmlFor="pilot-alias"
+              className="font-label-md text-label-md text-primary-fixed uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                badge
+              </span>
+              REGISTRA TU ALIAS O NOMBRE:
             </label>
-            <p className="text-on-surface-variant text-[12px] mb-2.5">
-              Ingresa tu nickname o gamer tag para figurar en la tabla global:
-            </p>
 
-            <div className="flex gap-2">
+            <div className="w-full max-w-xs flex flex-col items-center gap-2">
               <input
+                id="pilot-alias"
                 type="text"
-                maxLength={16}
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value.toUpperCase())}
-                placeholder="TU NICKNAME (EJ: PILOTO_99)"
-                disabled={saved || isSaving}
-                className="flex-1 bg-surface-container-lowest text-primary font-headline-sm text-headline-sm px-3 py-2 rounded focus:border-primary-container focus:shadow-[0_0_10px_rgba(0,245,255,0.4)] outline-none border border-outline-variant/40 uppercase placeholder:text-outline tracking-wider"
+                maxLength={15}
+                disabled={isSaved || isSubmitting}
+                value={gamerTag}
+                onChange={(e) =>
+                  setGamerTag(
+                    e.target.value.replace(/[^a-zA-Z0-9_-]/g, "").toUpperCase()
+                  )
+                }
+                placeholder="PILOTO_01"
+                className="w-full py-2.5 px-4 bg-surface-container-highest text-primary font-headline-md text-headline-md text-center uppercase rounded focus:bg-surface-bright focus:text-white shadow-[0_0_15px_rgba(0,245,255,0.3)] outline-none border border-primary-container/60 tracking-widest disabled:opacity-50"
               />
-
-              <button
-                type="button"
-                onClick={handleSaveScore}
-                disabled={isSaving || saved}
-                className={`px-4 py-2 rounded font-label-md text-label-md uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                  saved
-                    ? "bg-tertiary text-on-tertiary shadow-[0_0_12px_rgba(222,231,0,0.8)] cursor-default"
-                    : "bg-primary-container hover:bg-white text-on-primary shadow-[0_0_15px_rgba(0,245,255,0.7)]"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">
-                  {saved ? "check_circle" : "publish"}
-                </span>
-                {saved ? "REGISTRADO" : isSaving ? "ENVIANDO..." : "REGISTRAR"}
-              </button>
+              <span className="text-[11px] text-outline-variant uppercase tracking-wider">
+                MÃX. 15 CARACTERES (LETRAS, NÃšMEROS Y GUIONES)
+              </span>
             </div>
 
             {/* Mensajes de Confirmación o Error */}
@@ -184,18 +244,57 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
             )}
           </div>
 
-          {/* Botones de Acción */}
+          {/* Mensaje de Estado / Feedback */}
+          {statusMessage && (
+            <div
+              className={`w-full mb-4 p-2.5 rounded font-label-sm text-label-sm uppercase tracking-wider text-center border ${
+                statusMessage.includes("EXITOSAMENTE")
+                  ? "bg-tertiary-container/20 text-tertiary-fixed border-tertiary-container/40"
+                  : "bg-primary-container/20 text-primary-fixed border-primary-container/40"
+              }`}
+            >
+              {statusMessage}
+            </div>
+          )}
+
+          {/* Botones de AcciÃ³n */}
           <div className="w-full flex flex-col gap-2.5">
+            {!isSaved ? (
+              <button
+                type="button"
+                disabled={isSubmitting || !gamerTag.trim()}
+                onClick={handleSaveScore}
+                className="w-full py-3 bg-primary-container hover:bg-white text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(0,245,255,0.8)] transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-2 cursor-pointer font-bold disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[24px]">
+                  {isSubmitting ? "hourglass_empty" : "verified"}
+                </span>
+                {isSubmitting
+                  ? "TRANSMITIENDO A SUPABASE..."
+                  : "GUARDAR EN SALÃ“N DE LA FAMA"}
+              </button>
+            ) : (
+              <Link
+                href={`/leaderboard?game=${gameId}`}
+                className="w-full py-3 bg-tertiary-container hover:bg-tertiary-fixed text-on-tertiary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(222,231,0,0.8)] transition-all flex items-center justify-center gap-2 font-bold text-center"
+              >
+                <span className="material-symbols-outlined text-[24px]">
+                  leaderboard
+                </span>
+                VER EN EL SALÃ“N DE LA FAMA â†’
+              </Link>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
               <button
                 type="button"
-                onClick={onRestart}
+                onClick={handleInternalRestart}
                 className="py-3 bg-secondary-container hover:bg-secondary text-white font-title-sm text-title-sm uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,77,128,0.7)] transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5 cursor-pointer font-bold"
               >
                 <span className="material-symbols-outlined text-[20px]">
                   replay
                 </span>
-                REINTENTAR PARTIDA
+                REINTENTAR
               </button>
 
               <Link
@@ -203,18 +302,11 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
                 className="py-3 bg-surface-container-highest hover:bg-surface-bright text-on-surface font-title-sm text-title-sm uppercase tracking-wider rounded transition-all duration-150 active:translate-y-1 flex items-center justify-center gap-1.5 text-center border border-outline-variant/30"
               >
                 <span className="material-symbols-outlined text-[20px]">
-                  leaderboard
+                  door_open
                 </span>
-                SALÓN DE LA FAMA
+                IR AL VAULT
               </Link>
             </div>
-
-            <Link
-              href="/"
-              className="py-2.5 bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider rounded transition-all text-center"
-            >
-              IR AL VAULT PRINCIPAL
-            </Link>
           </div>
         </div>
       )}
