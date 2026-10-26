@@ -1,20 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/library/Header";
 import { Footer } from "@/components/library/Footer";
 import { LeaderboardPodium } from "@/components/leaderboard/LeaderboardPodium";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { fetchLeaderboardScores } from "@/lib/scores";
+import { fetchLeaderboardScores, toCanonicalGameId } from "@/lib/scores";
 import { getGameConfig } from "@/app/games/_lib/registry";
 import { LeaderboardEntry, LeaderboardPeriod } from "@/types/leaderboard";
 import { LEADERBOARD_ENTRIES } from "@/data/leaderboard";
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
+  const searchParams = useSearchParams();
+  const gameParam = searchParams.get("game");
+  const urlGame = gameParam ? toCanonicalGameId(gameParam) : null;
+
   const [credits] = useState<number>(4);
   const [sfx, setSfx] = useState<boolean>(true);
   const [music, setMusic] = useState<boolean>(true);
-  const [selectedGame, setSelectedGame] = useState<string>("asteroids-2084");
+  const [manualGame, setManualGame] = useState<string | null>(null);
+  const selectedGame = manualGame || urlGame || "asteroids-2084";
   const [period, setPeriod] = useState<LeaderboardPeriod>("all-time");
   const [entries, setEntries] =
     useState<LeaderboardEntry[]>(LEADERBOARD_ENTRIES);
@@ -50,7 +56,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header común sincronizado */}
+      {/* Header comÃºn sincronizado */}
       <Header
         credits={credits}
         sfx={sfx}
@@ -88,7 +94,7 @@ export default function LeaderboardPage() {
 
           {/* Encabezado Monumental & Metadatos */}
           <div className="relative mt-space-md mb-space-xl flex flex-col items-center text-center">
-            {/* Resplandor de fondo neón */}
+            {/* Resplandor de fondo neÃ³n */}
             <div className="absolute -top-12 w-96 h-36 bg-tertiary-container/20 blur-3xl rounded-full pointer-events-none"></div>
             <div className="absolute top-0 w-80 h-32 bg-primary-container/20 blur-3xl rounded-full pointer-events-none"></div>
 
@@ -97,12 +103,12 @@ export default function LeaderboardPage() {
                 military_tech
               </span>
               <span className="font-label-md text-label-md text-tertiary-fixed uppercase tracking-widest font-bold">
-                REGISTRO OFICIAL DE MAESTRÍA COIN-OP
+                REGISTRO OFICIAL DE MAESTRÃA COIN-OP
               </span>
             </div>
 
             <h1 className="font-headline-lg lg:font-display-lg text-headline-lg lg:text-display-lg uppercase tracking-widest text-primary drop-shadow-[0_0_20px_rgba(0,245,255,0.7)]">
-              SALÓN DE LA FAMA
+              SALÃ“N DE LA FAMA
             </h1>
             <p className="mt-space-xs max-w-2xl font-title-sm text-title-sm uppercase tracking-wider text-secondary-fixed drop-shadow-[0_0_8px_rgba(255,77,128,0.6)]">
               LOS MEJORES MAESTROS DE LA MONEDA Y EL JOYSTICK DE TODA LA RED
@@ -126,7 +132,7 @@ export default function LeaderboardPage() {
                   CABINA:
                 </span>
                 <span className="font-label-sm text-label-sm text-primary-fixed font-bold">
-                  {activeGameConfig.cabinetNumber} •{" "}
+                  {activeGameConfig.cabinetNumber} â€¢{" "}
                   {activeGameConfig.developer}
                 </span>
               </div>
@@ -135,7 +141,7 @@ export default function LeaderboardPage() {
               </span>
               <div className="hidden md:flex items-center gap-space-xs">
                 <span className="font-label-sm text-label-sm text-outline">
-                  VERIFICACIÓN:
+                  VERIFICACIÃ“N:
                 </span>
                 <span className="font-label-sm text-label-sm text-on-surface font-bold">
                   SUPABASE CLOUD RLS
@@ -144,7 +150,7 @@ export default function LeaderboardPage() {
             </div>
           </div>
 
-          {/* Podio Neón Top 3 */}
+          {/* Podio NeÃ³n Top 3 */}
           <LeaderboardPodium
             entries={entries}
             gameTitle={activeGameConfig.title}
@@ -156,7 +162,7 @@ export default function LeaderboardPage() {
             selectedGame={selectedGame}
             onSelectGame={(g) => {
               setIsLoading(true);
-              setSelectedGame(g);
+              setManualGame(g);
             }}
             period={period}
             onSelectPeriod={(p) => {
@@ -170,5 +176,19 @@ export default function LeaderboardPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col min-h-screen bg-surface items-center justify-center text-primary font-headline-md tracking-wider">
+          CARGANDO SALÓN DE LA FAMA...
+        </div>
+      }
+    >
+      <LeaderboardContent />
+    </Suspense>
   );
 }

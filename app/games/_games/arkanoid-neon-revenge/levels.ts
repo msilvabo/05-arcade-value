@@ -1,7 +1,9 @@
+import { BlockColor } from "./spritesheet";
+
 export interface BlockDef {
   col: number;
   row: number;
-  color: string;
+  color: BlockColor;
 }
 
 export interface LevelDef {
@@ -10,9 +12,30 @@ export interface LevelDef {
 }
 
 export const LEVELS: LevelDef[] = (() => {
-  const rowColors1 = ["red", "yellow", "cyan", "magenta", "hotpink", "green"];
-  const rowColors2 = ["gray", "cyan", "hotpink", "yellow", "magenta", "green"];
-  const rowColors4 = ["cyan", "magenta", "green", "yellow", "hotpink", "red"];
+  const rowColors1: BlockColor[] = [
+    "red",
+    "yellow",
+    "cyan",
+    "magenta",
+    "hotpink",
+    "green",
+  ];
+  const rowColors2: BlockColor[] = [
+    "gray",
+    "cyan",
+    "hotpink",
+    "yellow",
+    "magenta",
+    "green",
+  ];
+  const rowColors4: BlockColor[] = [
+    "cyan",
+    "magenta",
+    "green",
+    "yellow",
+    "hotpink",
+    "red",
+  ];
 
   const l1: BlockDef[] = [];
   for (let row = 0; row < 6; row++) {

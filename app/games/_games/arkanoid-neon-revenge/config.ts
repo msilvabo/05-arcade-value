@@ -42,9 +42,12 @@ export const ARKANOID_DETAILS: GameExtendedDetails = {
       "Destruye todas las matrices de ladrillos en cada sector sin dejar caer la esfera al vacío estelar para abrir la compuerta dimensional del siguiente cuadrante.",
     controls: [
       { key: "[A] [D] / [←] [→]", action: "Mover cápsula Vaus lateralmente" },
-      { key: "[ESPACIO]", action: "Lanzar esfera / Disparar cañones láser" },
-      { key: "[P]", action: "Pausar simulación del sistema" },
-      { key: "[TAB]", action: "Alternar telemetría de rendimiento CRT" },
+      {
+        key: "[RATÓN]",
+        action: "Desplazamiento horizontal directo de la cápsula",
+      },
+      { key: "[P] / [ESC]", action: "Pausar simulación del sistema" },
+      { key: "[RESTART]", action: "Reiniciar partida en cabina" },
     ],
     powerups: [
       {

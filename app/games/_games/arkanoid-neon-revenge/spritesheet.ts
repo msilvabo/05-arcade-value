@@ -1,3 +1,6 @@
+export type BlockColor =
+  "red" | "yellow" | "cyan" | "magenta" | "hotpink" | "green" | "gray";
+
 export interface SpriteFrame {
   sx: number;
   sy: number;
@@ -5,7 +8,9 @@ export interface SpriteFrame {
   sh: number;
 }
 
-export const EXPLOSION_FRAMES: Record<string, SpriteFrame[]> = {
+export const EXPLOSION_DURATION = 150; // milisegundos
+
+export const EXPLOSION_FRAMES: Record<BlockColor, SpriteFrame[]> = {
   red: [
     { sx: 256, sy: 176, sw: 32, sh: 16 },
     { sx: 288, sy: 176, sw: 32, sh: 16 },
@@ -50,7 +55,13 @@ export const EXPLOSION_FRAMES: Record<string, SpriteFrame[]> = {
   ],
 };
 
-export const SPRITES = {
+export interface SpriteAtlas {
+  paddle: SpriteFrame;
+  ball: SpriteFrame;
+  blocks: Record<BlockColor, SpriteFrame>;
+}
+
+export const SPRITES: SpriteAtlas = {
   paddle: { sx: 32, sy: 112, sw: 162, sh: 14 },
   ball: { sx: 32, sy: 32, sw: 16, sh: 16 },
   blocks: {
@@ -61,7 +72,7 @@ export const SPRITES = {
     magenta: { sx: 32, sy: 224, sw: 32, sh: 16 },
     hotpink: { sx: 32, sy: 256, sw: 32, sh: 16 },
     green: { sx: 32, sy: 208, sw: 32, sh: 16 },
-  } as Record<string, SpriteFrame>,
+  },
 };
 
 export const SPRITESHEET_URL = "/games/arkanoid/spritesheet-breakout.png";

@@ -52,7 +52,7 @@ export function getHighScore(gameId: string, fallbackDefault = 0): number {
 }
 
 /**
- * Guarda el récord en localStorage y opcionalmente en Supabase si se proveen datos básicos.
+ * Guarda el rÃ©cord en localStorage y opcionalmente en Supabase si se proveen datos bÃ¡sicos.
  */
 export async function saveGameScore(
   gameId: string,
@@ -82,8 +82,64 @@ export async function saveGameScore(
 }
 
 /**
- * Registra una puntuación con nombre/alias en la tabla `scores` de Supabase
+ * Registra una puntuaciÃ³n con nombre/alias en la tabla `scores` de Supabase
  */
+interface LocalStoredScore {
+  id: string;
+  game_id: string;
+  score: number;
+  player_name: string;
+  accuracy: string;
+  combo: string;
+  created_at: string;
+}
+
+function saveToLocalScoresArray(record: LocalStoredScore) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("arcade_vault_all_scores");
+    const list: LocalStoredScore[] = raw ? JSON.parse(raw) : [];
+    list.unshift(record);
+    localStorage.setItem(
+      "arcade_vault_all_scores",
+      JSON.stringify(list.slice(0, 100))
+    );
+  } catch (err) {
+    console.warn("Fallo guardando score en array local:", err);
+  }
+}
+
+function getLocalScores(canonicalId: string | null): LeaderboardEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("arcade_vault_all_scores");
+    if (!raw) return [];
+    const list: LocalStoredScore[] = JSON.parse(raw);
+    const filtered = canonicalId
+      ? list.filter((r) => toCanonicalGameId(r.game_id) === canonicalId)
+      : list;
+
+    return filtered.map((r) => {
+      const gameCfg = getGameConfig(r.game_id);
+      return {
+        rank: 0,
+        gamerTag: r.player_name,
+        avatar: "",
+        score: r.score,
+        formattedScore: r.score.toLocaleString(),
+        gameId: r.game_id,
+        gameTitle: gameCfg.title,
+        badge: "ROOKIE",
+        date: formatScoreDate(r.created_at),
+        accuracy: r.accuracy || "100%",
+        combo: r.combo || "x1",
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function saveScoreRecord({
   gameId,
   score,
@@ -108,6 +164,17 @@ export async function saveScoreRecord({
       // Ignorar fallo de localStorage
     }
   }
+
+  // Guardar siempre en historial local de scores
+  saveToLocalScoresArray({
+    id: `local_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    game_id: canonicalId,
+    score,
+    player_name: playerName.trim().toUpperCase() || "PILOTO_VAULT",
+    accuracy,
+    combo,
+    created_at: new Date().toISOString(),
+  });
 
   // Guardar en Supabase tabla `scores`
   try {
@@ -231,37 +298,67 @@ export async function fetchLeaderboardScores(
       query = query.gte("created_at", monthAgo);
     }
 
-    const { data, error } = await query;
+    const { data } = await query;
 
-    if (error) {
-      console.warn("Fallo al leer scores de Supabase:", error);
-      return getFallbackEntries(canonicalId);
-    }
-
-    if (!data || data.length === 0) {
-      return getFallbackEntries(canonicalId);
-    }
-
+    // Convertir registros de Supabase
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return data.map((row: any, index: number) => {
-      const rank = index + 1;
+    const remoteEntries: LeaderboardEntry[] = (data || []).map((row: any) => {
       const gameCfg = getGameConfig(row.game_id);
       const gamerTag =
         row.player_name || row.profiles?.gamer_tag || "PILOTO_VAULT";
       const avatar = row.profiles?.avatar_url || "";
 
       return {
-        rank,
+        rank: 0,
         gamerTag,
         avatar,
         score: row.score,
         formattedScore: row.score.toLocaleString(),
         gameId: row.game_id,
         gameTitle: gameCfg.title,
-        badge: getBadgeForRank(rank),
+        badge: "ROOKIE",
         date: formatScoreDate(row.created_at),
         accuracy: row.accuracy || "100%",
         combo: row.combo || "x1",
+      };
+    });
+
+    // Puntuaciones locales y de referencia
+    const localEntries = getLocalScores(canonicalId);
+    const benchmarkEntries = getFallbackEntries(canonicalId);
+
+    // Combinar todas las fuentes garantizando que siempre se muestren los 10 mejores
+    const combinedMap = new Map<string, LeaderboardEntry>();
+
+    // 1. Agregar referencias de catálogo (benchmark)
+    benchmarkEntries.forEach((b) => {
+      const key = `${toCanonicalGameId(b.gameId)}_${b.gamerTag.toUpperCase()}_${b.score}`;
+      combinedMap.set(key, b);
+    });
+
+    // 2. Agregar puntuaciones locales
+    localEntries.forEach((l) => {
+      const key = `${toCanonicalGameId(l.gameId)}_${l.gamerTag.toUpperCase()}_${l.score}`;
+      combinedMap.set(key, l);
+    });
+
+    // 3. Agregar puntuaciones remotas de Supabase
+    remoteEntries.forEach((r) => {
+      const key = `${toCanonicalGameId(r.gameId)}_${r.gamerTag.toUpperCase()}_${r.score}`;
+      combinedMap.set(key, r);
+    });
+
+    const merged = Array.from(combinedMap.values());
+    merged.sort((a, b) => b.score - a.score);
+
+    // Asignar rangos y medallas correlativas a los mejores
+    return merged.slice(0, 50).map((entry, index) => {
+      const rank = index + 1;
+      return {
+        ...entry,
+        rank,
+        badge: getBadgeForRank(rank),
+        formattedScore: entry.score.toLocaleString(),
       };
     });
   } catch (err) {

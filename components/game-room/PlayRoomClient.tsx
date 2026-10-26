@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { GameRoomHud } from "@/components/game-room/GameRoomHud";
 import { CrtCabinet } from "@/components/game-room/CrtCabinet";
 import { GameRoomOverlay } from "@/components/game-room/GameRoomOverlay";
@@ -35,9 +35,36 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [audioOn, setAudioOn] = useState<boolean>(true);
+  const [volume, setVolume] = useState<number>(0.7);
   const [scanlinesActive, setScanlinesActive] = useState<boolean>(true);
   const [curvatureActive, setCurvatureActive] = useState<boolean>(true);
   const [restartSignal, setRestartSignal] = useState<number>(0);
+
+  // Escuchar teclado para pausar (Escape / P) y silenciar (M) a nivel cabina
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement &&
+        (document.activeElement.tagName === "INPUT" ||
+          document.activeElement.tagName === "TEXTAREA")
+      ) {
+        return;
+      }
+
+      if (e.key === "Escape" || e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        if (!isGameOver) {
+          setIsPaused((prev) => !prev);
+        }
+      } else if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        setAudioOn((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isGameOver]);
 
   const handleScoreIncrement = (pts: number) => {
     setScore((prev) => prev + pts);
@@ -80,6 +107,8 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
         onTogglePause={() => setIsPaused((prev) => !prev)}
         audioOn={audioOn}
         onToggleAudio={() => setAudioOn((prev) => !prev)}
+        volume={volume}
+        onVolumeChange={setVolume}
         gameId={gameId}
       />
 
@@ -106,6 +135,8 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
                   onLevelChange: (lvl) => setLevel(lvl),
                   onGameOver: handleGameOver,
                   restartSignal: restartSignal,
+                  audioOn: audioOn,
+                  volume: volume,
                 }}
               />
             ) : (

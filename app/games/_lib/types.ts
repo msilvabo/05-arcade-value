@@ -10,6 +10,8 @@ export interface CabinetGameProps {
   onLevelChange?: (level: number) => void;
   onGameOver?: (finalScore: number) => void;
   restartSignal?: number;
+  audioOn?: boolean;
+  volume?: number;
 }
 
 export interface GameModule {

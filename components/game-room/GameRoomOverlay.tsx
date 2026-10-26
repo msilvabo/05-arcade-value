@@ -27,7 +27,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Ajuste de estado al cambiar isGameOver sin efecto síncrono
+  // Ajuste de estado al cambiar isGameOver sin efecto sÃ­ncrono
   const [prevGameOver, setPrevGameOver] = useState(isGameOver);
   if (prevGameOver !== isGameOver) {
     setPrevGameOver(isGameOver);
@@ -95,16 +95,16 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
 
       if (res.success) {
         setIsSaved(true);
-        setStatusMessage("✓ PUNTUACIÓN REGISTRADA EXITOSAMENTE EN SUPABASE");
+        setStatusMessage("âœ“ PUNTUACIÃ“N REGISTRADA EXITOSAMENTE EN SUPABASE");
       } else {
         setIsSaved(true);
         setStatusMessage(
-          `✓ GUARDADO LOCALMENTE (${res.error || "Récord guardado"})`
+          `âœ“ GUARDADO LOCALMENTE (${res.error || "RÃ©cord guardado"})`
         );
       }
     } catch {
       setIsSaved(true);
-      setStatusMessage("✓ GUARDADO LOCALMENTE EN ESTE DISPOSITIVO");
+      setStatusMessage("âœ“ GUARDADO LOCALMENTE EN ESTE DISPOSITIVO");
     } finally {
       setIsSubmitting(false);
     }
@@ -125,16 +125,16 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
         <div className="relative w-full max-w-md bg-surface-container-low rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(0,245,255,0.4)] border border-primary-container/40 flex flex-col items-center text-center">
           <div className="bg-primary-container px-3 py-0.5 rounded shadow-[0_0_12px_rgba(0,245,255,0.8)] -mt-11 mb-4">
             <span className="font-label-sm text-label-sm text-on-primary uppercase tracking-widest font-bold">
-              TERMINAL EN SUSPENSIÓN
+              TERMINAL EN SUSPENSIÃ“N
             </span>
           </div>
 
           <h2 className="font-display-lg text-display-lg text-primary tracking-wider uppercase drop-shadow-[0_0_16px_rgba(0,245,255,0.9)] animate-pulse">
-            ⏸ PAUSA
+            â¸ PAUSA
           </h2>
 
           <p className="font-body-md text-body-md text-on-surface-variant my-3">
-            La simulación cuántica ha sido pausada temporalmente.
+            La simulaciÃ³n cuÃ¡ntica ha sido pausada temporalmente.
           </p>
 
           <div className="w-full flex flex-col gap-2.5 mt-2">
@@ -143,7 +143,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
               onClick={onResume}
               className="w-full py-3 bg-primary-container hover:bg-white text-on-primary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(0,245,255,0.8)] transition-all cursor-pointer"
             >
-              ▶ REANUDAR PARTIDA
+              â–¶ REANUDAR PARTIDA
             </button>
 
             <Link
@@ -168,22 +168,22 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
         <div className="relative w-full max-w-lg bg-surface-container-low rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(255,77,128,0.5),inset_0_0_20px_rgba(0,245,255,0.15)] border border-secondary-container/50 flex flex-col items-center text-center">
           <div className="bg-secondary-container px-3 py-0.5 rounded shadow-[0_0_12px_rgba(255,77,128,0.8)] -mt-11 mb-4">
             <span className="font-label-sm text-label-sm text-white uppercase tracking-widest font-bold">
-              ARCADE VAULT • REGISTRO DE CLASIFICACIÓN
+              ARCADE VAULT â€¢ REGISTRO DE CLASIFICACIÃ“N
             </span>
           </div>
 
           <h2 className="font-display-lg text-display-lg text-secondary-container tracking-wider uppercase drop-shadow-[0_0_18px_rgba(255,77,128,0.9)] animate-pulse">
-            ★ FIN DEL JUEGO ★
+            â˜… FIN DEL JUEGO â˜…
           </h2>
 
           <p className="font-title-sm text-title-sm text-on-surface-variant uppercase tracking-wider mt-1 mb-4">
-            SIMULACIÓN CONCLUIDA EN LA CABINA CRT
+            SIMULACIÃ“N CONCLUIDA EN LA CABINA CRT
           </p>
 
           {/* Marcador Final */}
           <div className="w-full bg-surface-container-lowest p-4 rounded mb-4 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] border border-outline-variant/30 flex flex-col items-center">
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1">
-              PUNTUACIÓN TOTAL ACUMULADA
+              PUNTUACIÃ“N TOTAL ACUMULADA
             </span>
             <span className="font-headline-lg text-headline-lg text-primary tracking-widest font-bold drop-shadow-[0_0_12px_rgba(0,245,255,0.9)]">
               {score.toLocaleString()} PUNTOS
@@ -218,7 +218,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
                 className="w-full py-2.5 px-4 bg-surface-container-highest text-primary font-headline-md text-headline-md text-center uppercase rounded focus:bg-surface-bright focus:text-white shadow-[0_0_15px_rgba(0,245,255,0.3)] outline-none border border-primary-container/60 tracking-widest disabled:opacity-50"
               />
               <span className="text-[11px] text-outline-variant uppercase tracking-wider">
-                MÁX. 15 CARACTERES (LETRAS, NÚMEROS Y GUIONES)
+                MÃX. 15 CARACTERES (LETRAS, NÃšMEROS Y GUIONES)
               </span>
             </div>
           </div>
@@ -236,7 +236,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
             </div>
           )}
 
-          {/* Botones de Acción */}
+          {/* Botones de AcciÃ³n */}
           <div className="w-full flex flex-col gap-2.5">
             {!isSaved ? (
               <button
@@ -250,17 +250,17 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
                 </span>
                 {isSubmitting
                   ? "TRANSMITIENDO A SUPABASE..."
-                  : "GUARDAR EN SALÓN DE LA FAMA"}
+                  : "GUARDAR EN SALÃ“N DE LA FAMA"}
               </button>
             ) : (
               <Link
-                href="/leaderboard"
+                href={`/leaderboard?game=${gameId}`}
                 className="w-full py-3 bg-tertiary-container hover:bg-tertiary-fixed text-on-tertiary font-headline-md text-headline-md uppercase tracking-wider rounded shadow-[0_0_20px_rgba(222,231,0,0.8)] transition-all flex items-center justify-center gap-2 font-bold text-center"
               >
                 <span className="material-symbols-outlined text-[24px]">
                   leaderboard
                 </span>
-                VER EN EL SALÓN DE LA FAMA →
+                VER EN EL SALÃ“N DE LA FAMA â†’
               </Link>
             )}
 
