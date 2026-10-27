@@ -12,3 +12,4 @@ export const asteroidsModule: GameModule = {
 
 export { AsteroidsGame } from "./AsteroidsGame";
 export { ASTEROIDS_SUMMARY, ASTEROIDS_DETAILS } from "./config";
+export * from "./skins";

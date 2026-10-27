@@ -5,12 +5,12 @@ import { CabinetGameProps } from "@/app/games/_lib/types";
 import {
   TETRIS_COLS,
   TETRIS_ROWS,
-  TETRIS_COLORS,
   TETRIS_PIECES,
   TETRIS_LINE_SCORES,
   createTetrisBoard,
   rotateMatrix,
 } from "./engine";
+import { getTetrisSkinPalette, TetrisSkinPalette } from "./skins";
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
@@ -51,8 +51,18 @@ export const TetrisGame: FC<CabinetGameProps> = ({
   onLevelChange,
   onGameOver,
   restartSignal = 0,
+  skin = "clasico",
+  retroVariant = "amber",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Paleta activa en ref para rendimiento O(1) en el render loop
+  const currentPalette = getTetrisSkinPalette(skin, retroVariant);
+  const paletteRef = useRef<TetrisSkinPalette>(currentPalette);
+
+  useEffect(() => {
+    paletteRef.current = currentPalette;
+  }, [currentPalette]);
 
   // Referencias para evitar re-renders y capturar el estado a 60 FPS
   const animFrameIdRef = useRef<number | null>(null);
@@ -125,18 +135,23 @@ export const TetrisGame: FC<CabinetGameProps> = ({
 
   const addLineParticles = useCallback((row: number) => {
     const yCenter = BOARD_Y + row * BLOCK_SIZE + BLOCK_SIZE / 2;
+    const palette = paletteRef.current;
     for (let c = 0; c < TETRIS_COLS; c++) {
       const xCenter = BOARD_X + c * BLOCK_SIZE + BLOCK_SIZE / 2;
       for (let i = 0; i < 4; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 40 + Math.random() * 90;
+        const color =
+          palette.particles[
+            Math.floor(Math.random() * palette.particles.length)
+          ];
         particlesRef.current.push({
           x: xCenter,
           y: yCenter,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           size: 2 + Math.random() * 3,
-          color: Math.random() > 0.5 ? "#00f5ff" : "#ff007f",
+          color,
           alpha: 1,
           decay: 1.5 + Math.random(),
         });
@@ -234,15 +249,18 @@ export const TetrisGame: FC<CabinetGameProps> = ({
     onScoreChangeRef.current?.(scoreRef.current);
     current.y = gy;
 
-    // Partículas de impacto de caída instantánea
+    // Partículas de impacto de caída instantánea con color del skin
+    const palette = paletteRef.current;
     for (let c = 0; c < current.shape[0].length; c++) {
+      const pColor =
+        palette.particles[Math.floor(Math.random() * palette.particles.length)];
       particlesRef.current.push({
         x: BOARD_X + (current.x + c) * BLOCK_SIZE + BLOCK_SIZE / 2,
         y: BOARD_Y + (gy + current.shape.length) * BLOCK_SIZE,
         vx: (Math.random() - 0.5) * 60,
         vy: -20 - Math.random() * 40,
         size: 2 + Math.random() * 2,
-        color: "#00f5ff",
+        color: pColor,
         alpha: 0.9,
         decay: 2.2,
       });
@@ -309,7 +327,7 @@ export const TetrisGame: FC<CabinetGameProps> = ({
     spawnPiece();
 
     onScoreChangeRef.current?.(0);
-    onLivesChangeRef.current?.(1); // Tetris maneja 1 vida según Spec 06 / Spec 07
+    onLivesChangeRef.current?.(1);
     onLevelChangeRef.current?.(1);
   }, [randomPiece, spawnPiece]);
 
@@ -376,30 +394,37 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       size: number,
       alpha = 1
     ) => {
-      const color = TETRIS_COLORS[colorIndex];
+      const palette = paletteRef.current;
+      const color = palette.pieces.colors[colorIndex];
       if (!color) return;
 
       context.save();
       context.globalAlpha = alpha;
 
-      // Fondo del bloque con brillo neón
-      context.shadowColor = color;
-      context.shadowBlur = 6;
+      // Resplandor del bloque según la filosofía del skin activo
+      if (palette.pieces.glowBlur > 0) {
+        context.shadowColor = color;
+        context.shadowBlur = palette.pieces.glowBlur;
+      } else {
+        context.shadowColor = "transparent";
+        context.shadowBlur = 0;
+      }
+
       context.fillStyle = color;
       context.fillRect(x + 1, y + 1, size - 2, size - 2);
 
       // Bisel superior iluminado
-      context.fillStyle = "rgba(255, 255, 255, 0.35)";
+      context.fillStyle = palette.pieces.bevelLight;
       context.fillRect(x + 1, y + 1, size - 2, 3);
       context.fillRect(x + 1, y + 1, 3, size - 2);
 
       // Bisel inferior sombreado
-      context.fillStyle = "rgba(0, 0, 0, 0.4)";
+      context.fillStyle = palette.pieces.bevelDark;
       context.fillRect(x + 1, y + size - 4, size - 2, 3);
       context.fillRect(x + size - 4, y + 1, 3, size - 2);
 
       // Centro sutil
-      context.fillStyle = "rgba(255, 255, 255, 0.12)";
+      context.fillStyle = palette.pieces.centerHighlight;
       context.fillRect(x + 4, y + 4, size - 8, size - 8);
 
       context.restore();
@@ -408,6 +433,8 @@ export const TetrisGame: FC<CabinetGameProps> = ({
     const loop = (currentTime: number) => {
       const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
+
+      const palette = paletteRef.current;
 
       // 1. UPDATE FÍSICA
       if (!isPausedRef.current && !isGameOverRef.current) {
@@ -447,11 +474,11 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       }
 
       // 2. RENDER GRÁFICO (Canvas 800x600)
-      ctx.fillStyle = "#03060c";
+      ctx.fillStyle = palette.background;
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       // Grilla de fondo del gabinete
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.04)";
+      ctx.strokeStyle = palette.gridLine;
       ctx.lineWidth = 1;
       for (let x = 0; x < CANVAS_WIDTH; x += 40) {
         ctx.beginPath();
@@ -473,39 +500,44 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       const lh = BOARD_HEIGHT;
 
       ctx.save();
-      ctx.fillStyle = "rgba(4, 9, 20, 0.75)";
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.25)";
+      ctx.fillStyle = palette.panels.background;
+      ctx.strokeStyle = palette.panels.border;
       ctx.lineWidth = 1;
       ctx.fillRect(lx, ly, lw, lh);
       ctx.strokeRect(lx, ly, lw, lh);
 
-      // Esquinas neón panel izquierdo
-      ctx.fillStyle = "#00f5ff";
+      // Esquinas panel izquierdo
+      ctx.fillStyle = palette.panels.corner;
+      if (palette.glowBlur > 0) {
+        ctx.shadowColor = palette.panels.corner;
+        ctx.shadowBlur = 6;
+      }
       ctx.fillRect(lx - 2, ly - 2, 8, 2);
       ctx.fillRect(lx - 2, ly - 2, 2, 8);
       ctx.fillRect(lx + lw - 6, ly - 2, 8, 2);
       ctx.fillRect(lx + lw, ly - 2, 2, 8);
+      ctx.shadowBlur = 0;
 
       // Título
-      ctx.fillStyle = "#00f5ff";
+      ctx.fillStyle = palette.panels.title;
       ctx.font = "bold 13px monospace";
       ctx.fillText("CYBER TETRIS 99", lx + 16, ly + 32);
-      ctx.fillStyle = "rgba(0, 245, 255, 0.55)";
+      ctx.fillStyle = palette.panels.subtitle;
       ctx.font = "10px monospace";
       ctx.fillText("PROTOCOL REV-1984", lx + 16, ly + 48);
 
       // Separador
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.15)";
+      ctx.strokeStyle = palette.panels.separator;
       ctx.beginPath();
       ctx.moveTo(lx + 16, ly + 62);
       ctx.lineTo(lx + lw - 16, ly + 62);
       ctx.stroke();
 
       // Métricas
-      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.fillStyle = palette.panels.label;
       ctx.font = "11px monospace";
       ctx.fillText("LÍNEAS TOTALES", lx + 16, ly + 90);
-      ctx.fillStyle = "#ffd54f";
+      ctx.fillStyle = palette.panels.valuePrimary;
       ctx.font = "bold 20px monospace";
       ctx.fillText(
         String(linesRef.current).padStart(4, "0"),
@@ -513,10 +545,10 @@ export const TetrisGame: FC<CabinetGameProps> = ({
         ly + 116
       );
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.fillStyle = palette.panels.label;
       ctx.font = "11px monospace";
       ctx.fillText("NIVEL CADENCIA", lx + 16, ly + 150);
-      ctx.fillStyle = "#00f5ff";
+      ctx.fillStyle = palette.panels.valueSecondary;
       ctx.font = "bold 20px monospace";
       ctx.fillText(
         `LV.${String(levelRef.current).padStart(2, "0")}`,
@@ -525,13 +557,14 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       );
 
       // Separador
+      ctx.strokeStyle = palette.panels.separator;
       ctx.beginPath();
       ctx.moveTo(lx + 16, ly + 205);
       ctx.lineTo(lx + lw - 16, ly + 205);
       ctx.stroke();
 
       // Comandos
-      ctx.fillStyle = "#00f5ff";
+      ctx.fillStyle = palette.panels.title;
       ctx.font = "bold 11px monospace";
       ctx.fillText("COMANDOS CRT", lx + 16, ly + 230);
 
@@ -544,23 +577,22 @@ export const TetrisGame: FC<CabinetGameProps> = ({
 
       controls.forEach(([btn, action], idx) => {
         const rowY = ly + 260 + idx * 32;
-        ctx.fillStyle = "#ff007f";
+        ctx.fillStyle = palette.panels.commandKey;
         ctx.font = "bold 10px monospace";
         ctx.fillText(btn, lx + 16, rowY);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.fillStyle = palette.panels.commandDesc;
         ctx.font = "10px monospace";
         ctx.fillText(action, lx + 16, rowY + 14);
       });
       ctx.restore();
 
       // --- TABLERO PRINCIPAL ---
-      // Fondo del tablero
       ctx.save();
-      ctx.fillStyle = "#020408";
+      ctx.fillStyle = palette.board.background;
       ctx.fillRect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
 
       // Cuadrícula interior del tablero
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.08)";
+      ctx.strokeStyle = palette.board.gridLine;
       ctx.lineWidth = 0.5;
       for (let c = 1; c < TETRIS_COLS; c++) {
         ctx.beginPath();
@@ -604,7 +636,7 @@ export const TetrisGame: FC<CabinetGameProps> = ({
                 BOARD_Y + (gy + r) * BLOCK_SIZE,
                 current.shape[r][c],
                 BLOCK_SIZE,
-                0.22
+                palette.ghost.alpha
               );
             }
           }
@@ -630,9 +662,9 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       // Destellos de líneas completadas
       flashLinesRef.current.forEach((fl) => {
         ctx.save();
-        ctx.fillStyle = `rgba(255, 255, 255, ${fl.alpha * 0.9})`;
-        ctx.shadowColor = "#00f5ff";
-        ctx.shadowBlur = 15;
+        ctx.fillStyle = palette.lineFlash.fill(fl.alpha);
+        ctx.shadowColor = palette.lineFlash.glowColor;
+        ctx.shadowBlur = palette.lineFlash.glowBlur;
         ctx.fillRect(
           BOARD_X,
           BOARD_Y + fl.row * BLOCK_SIZE,
@@ -642,13 +674,18 @@ export const TetrisGame: FC<CabinetGameProps> = ({
         ctx.restore();
       });
 
-      // Borde exterior del tablero neón
-      ctx.strokeStyle = "#00f5ff";
+      // Borde exterior del tablero
+      ctx.strokeStyle = palette.board.border;
       ctx.lineWidth = 2;
+      if (palette.glowBlur > 0) {
+        ctx.shadowColor = palette.board.border;
+        ctx.shadowBlur = Math.min(palette.glowBlur, 12);
+      }
       ctx.strokeRect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
+      ctx.shadowBlur = 0;
 
       // Bisel de acento en el marco
-      ctx.fillStyle = "#ff007f";
+      ctx.fillStyle = palette.board.cornerAccent;
       ctx.fillRect(BOARD_X - 4, BOARD_Y - 4, 8, 8);
       ctx.fillRect(BOARD_X + BOARD_WIDTH - 4, BOARD_Y - 4, 8, 8);
       ctx.fillRect(BOARD_X - 4, BOARD_Y + BOARD_HEIGHT - 4, 8, 8);
@@ -663,20 +700,25 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       const rh = 180;
 
       ctx.save();
-      ctx.fillStyle = "rgba(4, 9, 20, 0.75)";
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.25)";
+      ctx.fillStyle = palette.panels.background;
+      ctx.strokeStyle = palette.panels.border;
       ctx.lineWidth = 1;
       ctx.fillRect(rx, ry, rw, rh);
       ctx.strokeRect(rx, ry, rw, rh);
 
       // Esquinas panel derecho
-      ctx.fillStyle = "#00f5ff";
+      ctx.fillStyle = palette.panels.corner;
+      if (palette.glowBlur > 0) {
+        ctx.shadowColor = palette.panels.corner;
+        ctx.shadowBlur = 6;
+      }
       ctx.fillRect(rx - 2, ry - 2, 8, 2);
       ctx.fillRect(rx - 2, ry - 2, 2, 8);
       ctx.fillRect(rx + rw - 6, ry - 2, 8, 2);
       ctx.fillRect(rx + rw, ry - 2, 2, 8);
+      ctx.shadowBlur = 0;
 
-      ctx.fillStyle = "#00f5ff";
+      ctx.fillStyle = palette.panels.title;
       ctx.font = "bold 12px monospace";
       ctx.fillText("SIGUIENTE PIEZA", rx + 16, ry + 28);
 
@@ -712,17 +754,17 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       const bh = BOARD_HEIGHT - rh - 20;
 
       ctx.save();
-      ctx.fillStyle = "rgba(4, 9, 20, 0.75)";
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.25)";
+      ctx.fillStyle = palette.panels.background;
+      ctx.strokeStyle = palette.panels.border;
       ctx.lineWidth = 1;
       ctx.fillRect(bx, by, bw, bh);
       ctx.strokeRect(bx, by, bw, bh);
 
-      ctx.fillStyle = "#ff007f";
+      ctx.fillStyle = palette.panels.bannerTitle;
       ctx.font = "bold 11px monospace";
       ctx.fillText("MATRIZ CUÁNTICA", bx + 16, by + 28);
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+      ctx.fillStyle = palette.panels.bannerText;
       ctx.font = "10px monospace";
       ctx.fillText("STATUS: ACTIVO", bx + 16, by + 50);
       ctx.fillText("BUFFER: ESTABLE", bx + 16, by + 68);
@@ -732,7 +774,10 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       for (let i = 0; i < 5; i++) {
         const barY = by + 110 + i * 14;
         const fillW = Math.max(20, (bw - 32) * (1 - i * 0.18));
-        ctx.fillStyle = i === 0 ? "#00f5ff" : "rgba(0, 245, 255, 0.35)";
+        ctx.fillStyle =
+          i === 0
+            ? palette.panels.bannerBarActive
+            : palette.panels.bannerBarInactive;
         ctx.fillRect(bx + 16, barY, fillW, 6);
       }
       ctx.restore();
@@ -742,8 +787,10 @@ export const TetrisGame: FC<CabinetGameProps> = ({
         ctx.save();
         ctx.globalAlpha = p.alpha;
         ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 8;
+        if (palette.glowBlur > 0) {
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 8;
+        }
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();

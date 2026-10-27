@@ -2,6 +2,8 @@
 
 import { FC } from "react";
 import Link from "next/link";
+import { GameSkinId, RetroPaletteVariant } from "@/app/games/_lib/types";
+import { SkinSelector } from "@/components/game-room/SkinSelector";
 
 interface GameRoomHudProps {
   score: number;
@@ -15,6 +17,9 @@ interface GameRoomHudProps {
   volume?: number;
   onVolumeChange?: (v: number) => void;
   gameId: string;
+  skin?: GameSkinId;
+  retroVariant?: RetroPaletteVariant;
+  onSelectSkin?: (skin: GameSkinId, variant?: RetroPaletteVariant) => void;
 }
 
 export const GameRoomHud: FC<GameRoomHudProps> = ({
@@ -29,6 +34,9 @@ export const GameRoomHud: FC<GameRoomHudProps> = ({
   volume = 0.7,
   onVolumeChange,
   gameId,
+  skin = "clasico",
+  retroVariant = "amber",
+  onSelectSkin,
 }) => {
   const formattedScore = score.toLocaleString().padStart(6, "0");
   const formattedHighScore = highScore.toLocaleString().padStart(6, "0");
@@ -36,22 +44,22 @@ export const GameRoomHud: FC<GameRoomHudProps> = ({
   return (
     <header className="w-full bg-surface-container-lowest px-space-md lg:px-margin py-space-sm shadow-[0_8px_30px_rgba(0,0,0,0.8)] z-20 border-b border-outline-variant/30">
       <div className="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-space-sm">
-        {/* TelemetrÃ­a Primaria: Puntos y RÃ©cord */}
+        {/* Telemetría Primaria: Puntos y Récord */}
         <div className="flex items-center gap-space-md flex-wrap justify-center">
-          {/* PuntuaciÃ³n Actual */}
+          {/* Puntuación Actual */}
           <div className="bg-surface-container-low px-space-md py-space-xs rounded shadow-[inset_0_0_12px_rgba(0,245,255,0.15)] flex flex-col border border-primary-container/20">
             <span className="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-widest">
-              PUNTUACIÃ“N ACTUAL
+              PUNTUACIÓN ACTUAL
             </span>
             <span className="font-headline-md text-headline-md text-primary-container tracking-wider drop-shadow-[0_0_10px_rgba(0,245,255,0.8)]">
               {formattedScore}
             </span>
           </div>
 
-          {/* RÃ©cord Global */}
+          {/* Récord Global */}
           <div className="bg-surface-container-low px-space-md py-space-xs rounded shadow-[inset_0_0_12px_rgba(227,236,0,0.12)] flex flex-col border border-tertiary-container/20">
             <span className="font-label-sm text-label-sm text-tertiary-fixed tracking-widest uppercase">
-              RÃ‰CORD MÃXIMO
+              RÉCORD MÁXIMO
             </span>
             <span className="font-headline-md text-headline-md text-tertiary tracking-wider drop-shadow-[0_0_10px_rgba(253,255,181,0.7)]">
               {formattedHighScore}
@@ -74,7 +82,7 @@ export const GameRoomHud: FC<GameRoomHudProps> = ({
           </div>
         </div>
 
-        {/* TelemetrÃ­a Central: Vidas y Piloto */}
+        {/* Telemetría Central: Vidas y Piloto */}
         <div className="flex items-center gap-space-lg">
           {/* Vidas de Reserva */}
           <div className="flex flex-col items-center">
@@ -117,7 +125,25 @@ export const GameRoomHud: FC<GameRoomHudProps> = ({
           </div>
         </div>
 
-        {/* Botones de AcciÃ³n RÃ¡pida */}
+        {/* Selector de Skins Arcade Prominente */}
+        {onSelectSkin && (
+          <div className="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded border border-outline-variant/30">
+            <span className="font-label-sm text-[10px] text-tertiary-fixed uppercase font-bold flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">
+                palette
+              </span>
+              SKIN [T]:
+            </span>
+            <SkinSelector
+              currentSkin={skin}
+              retroVariant={retroVariant}
+              onSelectSkin={onSelectSkin}
+              variant="compact"
+            />
+          </div>
+        )}
+
+        {/* Botones de Acción Rápida */}
         <div className="flex items-center gap-space-xs">
           <button
             type="button"

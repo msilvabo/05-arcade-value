@@ -1,15 +1,17 @@
 "use client";
 
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { GameRoomHud } from "@/components/game-room/GameRoomHud";
 import { CrtCabinet } from "@/components/game-room/CrtCabinet";
 import { GameRoomOverlay } from "@/components/game-room/GameRoomOverlay";
+import { SkinSelector } from "@/components/game-room/SkinSelector";
 import { getHighScore, saveGameScore } from "@/lib/scores";
 import {
   CabinetGameHost,
   hasGameCabinetComponent,
   getGameConfig,
 } from "@/app/games/_lib/registry";
+import { GameSkinId, RetroPaletteVariant } from "@/app/games/_lib/types";
 
 interface PlayRoomClientProps {
   gameId: string;
@@ -17,6 +19,7 @@ interface PlayRoomClientProps {
 
 export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const isAsteroids = gameId === "asteroids-2084" || gameId === "asteroids";
+  const isTetris = gameId === "cyber-tetris-99" || gameId === "tetris";
   const gameConfig = getGameConfig(gameId);
   const hasGame = hasGameCabinetComponent(gameId);
 
@@ -39,8 +42,41 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const [scanlinesActive, setScanlinesActive] = useState<boolean>(true);
   const [curvatureActive, setCurvatureActive] = useState<boolean>(true);
   const [restartSignal, setRestartSignal] = useState<number>(0);
+  const [skin, setSkin] = useState<GameSkinId>("clasico");
+  const [retroVariant, setRetroVariant] =
+    useState<RetroPaletteVariant>("amber");
 
-  // Escuchar teclado para pausar (Escape / P) y silenciar (M) a nivel cabina
+  const handleSelectSkin = useCallback(
+    (newSkin: GameSkinId, newVariant?: RetroPaletteVariant) => {
+      setSkin(newSkin);
+      if (newVariant) {
+        setRetroVariant(newVariant);
+      }
+    },
+    []
+  );
+
+  const cycleSkin = useCallback(() => {
+    setSkin((currentSkin) => {
+      if (currentSkin === "clasico") {
+        return "neon";
+      }
+      if (currentSkin === "neon") {
+        setRetroVariant("amber");
+        return "retro";
+      }
+      if (currentSkin === "retro") {
+        if (retroVariant === "amber") {
+          setRetroVariant("green");
+          return "retro";
+        }
+        return "clasico";
+      }
+      return "clasico";
+    });
+  }, [retroVariant]);
+
+  // Escuchar teclado para pausar (Escape / P), silenciar (M) y cambiar skin (T / S) a nivel cabina
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -59,12 +95,20 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
       } else if (e.key === "m" || e.key === "M") {
         e.preventDefault();
         setAudioOn((prev) => !prev);
+      } else if (
+        e.key === "t" ||
+        e.key === "T" ||
+        (!isTetris && (e.key === "s" || e.key === "S"))
+      ) {
+        // 'T' (Tema) y 'S' (Skin) cambian de tema al vuelo (salvo 'S' en Tetris por caída suave)
+        e.preventDefault();
+        cycleSkin();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isGameOver]);
+  }, [isGameOver, isTetris, cycleSkin]);
 
   const handleScoreIncrement = (pts: number) => {
     setScore((prev) => prev + pts);
@@ -97,7 +141,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-surface select-none">
-      {/* HUD Superior Arcade */}
+      {/* HUD Superior Arcade con Selector de Skin Prominente */}
       <GameRoomHud
         score={score}
         highScore={highScore}
@@ -110,6 +154,9 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
         volume={volume}
         onVolumeChange={setVolume}
         gameId={gameId}
+        skin={skin}
+        retroVariant={retroVariant}
+        onSelectSkin={handleSelectSkin}
       />
 
       {/* Escenario Principal del Gabinete Arcade CRT */}
@@ -137,6 +184,8 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
                   restartSignal: restartSignal,
                   audioOn: audioOn,
                   volume: volume,
+                  skin: skin,
+                  retroVariant: retroVariant,
                 }}
               />
             ) : (
@@ -156,7 +205,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
               </div>
             )}
 
-            {/* Modales de Pausa y Game Over */}
+            {/* Modales de Pausa y Game Over con Selector de Skin en Pausa */}
             <GameRoomOverlay
               isPaused={isPaused}
               onResume={() => setIsPaused(false)}
@@ -164,13 +213,16 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
               onRestart={handleRestart}
               score={score}
               gameId={gameId}
+              currentSkin={skin}
+              retroVariant={retroVariant}
+              onSelectSkin={handleSelectSkin}
             />
           </CrtCabinet>
         </div>
 
-        {/* Barra de Herramientas de Emulación y Test Visual */}
+        {/* Barra de Herramientas de Emulación, Skins y Test Visual */}
         <div className="w-full max-w-4xl mt-space-sm flex flex-wrap items-center justify-between gap-space-xs bg-surface-container-low p-2 rounded border border-outline-variant/30">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="font-label-sm text-label-sm text-primary-fixed uppercase font-bold">
               AJUSTES CRT:
             </span>
@@ -196,6 +248,23 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
             >
               CURVATURA {curvatureActive ? "ON" : "OFF"}
             </button>
+
+            {/* Separador */}
+            <span className="text-outline-variant/60 hidden sm:inline">|</span>
+
+            {/* Selector de Skins Arcade con Componente Dedicado */}
+            <span className="font-label-sm text-label-sm text-tertiary-fixed uppercase font-bold flex items-center gap-1">
+              <span className="material-symbols-outlined text-[15px]">
+                palette
+              </span>
+              SKIN:
+            </span>
+            <SkinSelector
+              currentSkin={skin}
+              retroVariant={retroVariant}
+              onSelectSkin={handleSelectSkin}
+              variant="compact"
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -223,7 +292,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
         </div>
 
         {/* Guía de Control para el Jugador */}
-        <div className="w-full max-w-4xl mt-space-md grid grid-cols-1 md:grid-cols-3 gap-space-sm text-center">
+        <div className="w-full max-w-4xl mt-space-md grid grid-cols-2 md:grid-cols-4 gap-space-sm text-center">
           {gameConfig.missionLog.controls.slice(0, 3).map((ctrl, idx) => (
             <div
               key={idx}
@@ -237,6 +306,14 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
               </span>
             </div>
           ))}
+          <div className="bg-surface-container-low p-space-sm rounded shadow flex items-center justify-center gap-2 border border-tertiary-container/30">
+            <span className="px-2 py-0.5 bg-tertiary-container text-on-tertiary font-label-sm text-label-sm rounded uppercase font-bold">
+              S / T
+            </span>
+            <span className="font-label-sm text-label-sm text-tertiary-fixed uppercase tracking-wider">
+              CAMBIAR SKIN
+            </span>
+          </div>
         </div>
       </main>
 
@@ -250,9 +327,14 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
               LATENCIA: 0.8MS
             </span>
           </div>
-          <div className="flex items-center gap-space-md justify-center md:justify-end text-outline-variant">
-            <span>MODO COMPETICIÓN ACTIVO</span>
-            <span>{gameConfig.version}</span>
+          <div className="flex items-center gap-space-sm">
+            <span className="text-on-surface-variant uppercase">
+              PALETA ACTIVA:
+            </span>
+            <span className="text-primary-fixed uppercase font-bold">
+              {skin.toUpperCase()}{" "}
+              {skin === "retro" ? `(${retroVariant.toUpperCase()})` : ""}
+            </span>
           </div>
         </div>
       </footer>

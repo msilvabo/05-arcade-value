@@ -13,3 +13,4 @@ export const tetrisModule: GameModule = {
 export { TetrisGame } from "./TetrisGame";
 export { TETRIS_SUMMARY, TETRIS_DETAILS } from "./config";
 export * from "./engine";
+export * from "./skins";
