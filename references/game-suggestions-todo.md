@@ -1,7 +1,7 @@
 # Arcade Vault — Backlog de Sugerencias de Juegos Arcade
 
 > **Fuente de Verdad del Catálogo y Planificación de Juegos**  
-> Gestionado y actualizado automáticamente por el agente curador [`/game-planner`](file:///C:/learning/Fermando%20Herrera/ia/claudeCode/05-arcade-value/.agents/skills/game-planner/SKILL.md).
+> Gestionado y actualizado automáticamente por el agente curador [`/game-planner`](file:///C:/learning/Fermando%20Herrera/ia/claudeCode/05-arcade-value/.agents/agents/game-planner/agent.md).
 
 ---
 
