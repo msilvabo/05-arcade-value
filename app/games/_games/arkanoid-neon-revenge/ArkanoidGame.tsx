@@ -234,9 +234,39 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
       paddle.x = Math.max(0, Math.min(W - paddle.w, mouseX - paddle.w / 2));
     };
 
+    // Soporte táctil directo sobre el canvas (arrastre con dedo)
+    const updatePaddleFromTouch = (touch: Touch) => {
+      if (isPausedRef.current || gameState !== "playing") return;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const scaleX = canvas.width / rect.width;
+      const touchX = (touch.clientX - rect.left) * scaleX;
+      paddle.x = Math.max(0, Math.min(W - paddle.w, touchX - paddle.w / 2));
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      e.preventDefault();
+      updatePaddleFromTouch(e.touches[0]);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      e.preventDefault();
+      updatePaddleFromTouch(e.touches[0]);
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+    canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
 
     const collideAABB = (b: BlockEntity) => {
       return (
@@ -618,19 +648,25 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, [restartSignal]);
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden select-none cursor-crosshair"
+      className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden select-none cursor-crosshair touch-none"
+      style={{ touchAction: "none" }}
     >
       <canvas
         ref={canvasRef}
         width={W}
         height={H}
-        className="w-full h-full object-contain [image-rendering:pixelated]"
+        className="w-full h-full object-contain [image-rendering:pixelated] touch-none select-none"
+        style={{ touchAction: "none" }}
       />
     </div>
   );

@@ -12,6 +12,10 @@ import {
   getGameConfig,
 } from "@/app/games/_lib/registry";
 import { GameSkinId, RetroPaletteVariant } from "@/app/games/_lib/types";
+import {
+  VirtualGamepad,
+  useTouchControls,
+} from "@/components/game-room/virtual-controls";
 
 interface PlayRoomClientProps {
   gameId: string;
@@ -45,6 +49,13 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const [skin, setSkin] = useState<GameSkinId>("clasico");
   const [retroVariant, setRetroVariant] =
     useState<RetroPaletteVariant>("amber");
+
+  const {
+    mode: touchMode,
+    isTouchActive,
+    orientation,
+    cycleMode: cycleTouchMode,
+  } = useTouchControls();
 
   const handleSelectSkin = useCallback(
     (newSkin: GameSkinId, newVariant?: RetroPaletteVariant) => {
@@ -140,7 +151,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
     : `NV. ${String(level).padStart(2, "0")}: MATRIZ NEÓN`;
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface select-none">
+    <div className="flex flex-col min-h-screen bg-surface select-none overscroll-contain-y">
       {/* HUD Superior Arcade con Selector de Skin Prominente */}
       <GameRoomHud
         score={score}
@@ -220,6 +231,18 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
           </CrtCabinet>
         </div>
 
+        {/* Gamepad Virtual en Orientación Vertical (Consola Arcade Inferior) */}
+        {isTouchActive && orientation === "portrait" && (
+          <div className="w-full max-w-4xl mt-space-sm flex justify-center z-10">
+            <VirtualGamepad gameId={gameId} orientation="portrait" />
+          </div>
+        )}
+
+        {/* Gamepad Virtual en Orientación Horizontal (Overlay Flotante) */}
+        {isTouchActive && orientation === "landscape" && (
+          <VirtualGamepad gameId={gameId} orientation="landscape" />
+        )}
+
         {/* Barra de Herramientas de Emulación, Skins y Test Visual */}
         <div className="w-full max-w-4xl mt-space-sm flex flex-wrap items-center justify-between gap-space-xs bg-surface-container-low p-2 rounded border border-outline-variant/30">
           <div className="flex flex-wrap items-center gap-2">
@@ -247,6 +270,21 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
               }`}
             >
               CURVATURA {curvatureActive ? "ON" : "OFF"}
+            </button>
+            <button
+              type="button"
+              onClick={cycleTouchMode}
+              className={`px-2 py-1 rounded text-[11px] font-label-sm uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                touchMode === "on" || (touchMode === "auto" && isTouchActive)
+                  ? "bg-secondary-container text-white font-bold shadow-[0_0_8px_rgba(255,77,128,0.7)]"
+                  : "bg-surface-container-highest text-outline"
+              }`}
+              title="Alternar controles táctiles: AUTO, ON, OFF"
+            >
+              <span className="material-symbols-outlined text-[13px]">
+                touch_app
+              </span>
+              TOUCH {touchMode.toUpperCase()}
             </button>
 
             {/* Separador */}
