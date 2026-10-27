@@ -1,15 +1,10 @@
 "use client";
 
 import { FC, useEffect, useRef } from "react";
+import { CabinetGameProps } from "../../_lib/types";
+import { AsteroidsSkinPalette, getAsteroidsSkinPalette } from "./skins";
 
-export interface AsteroidsGameProps {
-  isPaused: boolean;
-  onScoreChange?: (score: number) => void;
-  onLivesChange?: (lives: number) => void;
-  onLevelChange?: (level: number) => void;
-  onGameOver?: (finalScore: number) => void;
-  restartSignal?: number;
-}
+export type AsteroidsGameProps = CabinetGameProps;
 
 const W = 800;
 const H = 600;
@@ -58,10 +53,10 @@ class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#00f5ff";
-    ctx.shadowColor = "#00f5ff";
-    ctx.shadowBlur = 6;
+  draw(ctx: CanvasRenderingContext2D, p: AsteroidsSkinPalette) {
+    ctx.fillStyle = p.bullet.fill;
+    ctx.shadowColor = p.bullet.glowColor;
+    ctx.shadowBlur = p.bullet.glowBlur;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -118,15 +113,15 @@ class Asteroid {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, p: AsteroidsSkinPalette) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = p.asteroid.stroke;
     ctx.lineWidth = 1.6;
     ctx.lineJoin = "round";
-    ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
-    ctx.shadowBlur = 4;
+    ctx.shadowColor = p.asteroid.glowColor;
+    ctx.shadowBlur = p.asteroid.glowBlur;
     ctx.beginPath();
     ctx.moveTo(this.verts[0][0], this.verts[0][1]);
     for (let i = 1; i < this.verts.length; i++) {
@@ -166,27 +161,27 @@ class PowerUp {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, p: AsteroidsSkinPalette) {
     if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
     const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.PI / 4);
-    ctx.strokeStyle = "#00f5ff";
+    ctx.strokeStyle = p.powerUp.stroke;
     ctx.lineWidth = 2;
-    ctx.shadowColor = "#00f5ff";
-    ctx.shadowBlur = 8;
+    ctx.shadowColor = p.powerUp.glowColor;
+    ctx.shadowBlur = p.powerUp.glowBlur;
     const r = this.radius * pulse;
     ctx.strokeRect(-r, -r, r * 2, r * 2);
     ctx.restore();
 
     ctx.save();
-    ctx.fillStyle = "#00f5ff";
+    ctx.fillStyle = p.powerUp.fill;
     ctx.font = "bold 12px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.shadowColor = "#00f5ff";
-    ctx.shadowBlur = 4;
+    ctx.shadowColor = p.powerUp.glowColor;
+    ctx.shadowBlur = Math.min(p.powerUp.glowBlur, 6);
     ctx.fillText("3x", this.x, this.y);
     ctx.restore();
   }
@@ -278,7 +273,7 @@ class Ship {
     return [new Bullet(ox, oy, this.angle)];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, p: AsteroidsSkinPalette) {
     if (this.dead) return;
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
       return;
@@ -286,11 +281,11 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = p.ship.stroke;
     ctx.lineWidth = 1.6;
     ctx.lineJoin = "round";
-    ctx.shadowColor = "#00f5ff";
-    ctx.shadowBlur = 6;
+    ctx.shadowColor = p.ship.glowColor;
+    ctx.shadowBlur = p.ship.glowBlur;
 
     // Silueta clásica arcade
     ctx.beginPath();
@@ -307,9 +302,9 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(7, 16), 0);
       ctx.lineTo(-8, 4);
-      ctx.strokeStyle = "rgba(255, 120, 0, 0.9)";
-      ctx.shadowColor = "#ff7800";
-      ctx.shadowBlur = 8;
+      ctx.strokeStyle = p.ship.thrustStroke;
+      ctx.shadowColor = p.ship.thrustGlowColor;
+      ctx.shadowBlur = p.ship.glowBlur > 0 ? Math.max(p.ship.glowBlur, 8) : 0;
       ctx.stroke();
     }
 
@@ -325,8 +320,9 @@ class Particle {
   life: number;
   ttl: number;
   dead: boolean;
+  color: string;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, color = "#00f5ff") {
     this.x = x;
     this.y = y;
     const angle = rand(0, Math.PI * 2);
@@ -336,6 +332,7 @@ class Particle {
     this.life = rand(0.4, 1.1);
     this.ttl = this.life;
     this.dead = false;
+    this.color = color;
   }
 
   update(dt: number) {
@@ -347,12 +344,15 @@ class Particle {
 
   draw(ctx: CanvasRenderingContext2D) {
     const alpha = Math.max(0, this.ttl / this.life);
-    ctx.strokeStyle = `rgba(0, 245, 255, ${alpha.toFixed(2)})`;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = this.color;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.x - this.vx * 0.05, this.y - this.vy * 0.05);
     ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -363,8 +363,18 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
   onLevelChange,
   onGameOver,
   restartSignal = 0,
+  skin = "clasico",
+  retroVariant = "amber",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Paleta activa O(1) con sincronización mediante ref
+  const currentPalette = getAsteroidsSkinPalette(skin, retroVariant);
+  const paletteRef = useRef(currentPalette);
+
+  useEffect(() => {
+    paletteRef.current = currentPalette;
+  }, [currentPalette]);
 
   // Referencias a callbacks para no reiniciar efectos
   const onScoreChangeRef = useRef(onScoreChange);
@@ -447,7 +457,11 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
     };
 
     const explode = (x: number, y: number, count = 10) => {
-      for (let i = 0; i < count; i++) particles.push(new Particle(x, y));
+      const pColors = paletteRef.current.particles;
+      for (let i = 0; i < count; i++) {
+        const color = pColors[Math.floor(Math.random() * pColors.length)];
+        particles.push(new Particle(x, y, color));
+      }
     };
 
     const killShip = () => {
@@ -588,12 +602,14 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
     };
 
     const draw = () => {
-      // Fondo negro espacial profundo
-      ctx.fillStyle = "#050608";
+      const p = paletteRef.current;
+
+      // Fondo del lienzo oscuro según skin
+      ctx.fillStyle = p.background;
       ctx.fillRect(0, 0, W, H);
 
-      // Grilla estelar vectorial tenue de fondo
-      ctx.strokeStyle = "rgba(0, 245, 255, 0.03)";
+      // Grilla estelar vectorial tenue según skin
+      ctx.strokeStyle = p.gridLine;
       ctx.lineWidth = 1;
       const step = 50;
       for (let x = step; x < W; x += step) {
@@ -609,20 +625,20 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
         ctx.stroke();
       }
 
-      particles.forEach((p) => p.draw(ctx));
-      asteroids.forEach((a) => a.draw(ctx));
-      powerUps.forEach((p) => p.draw(ctx));
-      bullets.forEach((b) => b.draw(ctx));
-      ship.draw(ctx);
+      particles.forEach((pt) => pt.draw(ctx));
+      asteroids.forEach((a) => a.draw(ctx, p));
+      powerUps.forEach((pu) => pu.draw(ctx, p));
+      bullets.forEach((b) => b.draw(ctx, p));
+      ship.draw(ctx, p);
 
       // Indicador sutil de Power-up activo (3x triple disparo)
       if (ship.tripleShot > 0) {
         ctx.save();
-        ctx.fillStyle = "#00f5ff";
+        ctx.fillStyle = p.hudText.fill;
         ctx.font = "bold 13px monospace";
         ctx.textAlign = "left";
-        ctx.shadowColor = "#00f5ff";
-        ctx.shadowBlur = 6;
+        ctx.shadowColor = p.hudText.glowColor;
+        ctx.shadowBlur = p.hudText.glowBlur;
         ctx.fillText(
           `⚡ TRIPLE DISPARO: ${ship.tripleShot.toFixed(1)}s`,
           18,
