@@ -12,6 +12,7 @@ import {
   BlockColor,
 } from "./spritesheet";
 import { LEVELS } from "./levels";
+import { ArkanoidSkinPalette, getArkanoidSkinPalette } from "./skins";
 
 const W = 800;
 const H = 600;
@@ -43,16 +44,6 @@ interface ExplosionEntity {
   elapsed: number;
 }
 
-const COLOR_MAP: Record<BlockColor, string> = {
-  red: "#ff3344",
-  yellow: "#ffea00",
-  cyan: "#00f0ff",
-  magenta: "#ff00ea",
-  hotpink: "#ff1493",
-  green: "#00ff66",
-  gray: "#8899a6",
-};
-
 export const ArkanoidGame: FC<CabinetGameProps> = ({
   isPaused,
   onScoreIncrement,
@@ -63,9 +54,19 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
   restartSignal,
   audioOn = true,
   volume = 0.7,
+  skin = "clasico",
+  retroVariant = "amber",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Paleta activa O(1) con sincronización reactiva mediante Ref
+  const currentPalette = getArkanoidSkinPalette(skin, retroVariant);
+  const paletteRef = useRef<ArkanoidSkinPalette>(currentPalette);
+
+  useEffect(() => {
+    paletteRef.current = currentPalette;
+  }, [currentPalette]);
 
   // Referencias para callbacks y estado de pausa sin recrear el bucle de renderizado
   const isPausedRef = useRef(isPaused);
@@ -157,11 +158,12 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
       vy: BASE_BALL_VY,
     };
 
+    const ballTrail: { x: number; y: number }[] = [];
     let blocks: BlockEntity[] = [];
     let explosions: ExplosionEntity[] = [];
     const keys = { ArrowLeft: false, ArrowRight: false, a: false, d: false };
 
-    // Carga de spritesheet con fallback procedimental
+    // Carga de spritesheet
     let ssImg: HTMLImageElement | null = null;
     let ssLoaded = false;
     const img = new Image();
@@ -177,6 +179,7 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
       ball.y = paddle.y - ball.h - 1;
       ball.vx = BASE_BALL_VX * speed;
       ball.vy = BASE_BALL_VY * speed;
+      ballTrail.length = 0;
     };
 
     const loadLevel = (n: number) => {
@@ -255,6 +258,12 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
         paddle.x = Math.min(W - paddle.w, paddle.x + PADDLE_SPEED * dt);
       }
 
+      // Registro de estela de la bola
+      ballTrail.unshift({ x: ball.x + ball.w / 2, y: ball.y + ball.h / 2 });
+      if (ballTrail.length > 6) {
+        ballTrail.pop();
+      }
+
       // Movimiento de la bola
       ball.x += ball.vx * dt;
       ball.y += ball.vy * dt;
@@ -275,7 +284,7 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
         playBounceSound();
       }
 
-      // Rebote en la paleta Vaus con cálculo de ángulo según punto de impacto
+      // Rebote en la paleta Vaus con modulación angular
       if (
         ball.vy > 0 &&
         ball.x + ball.w > paddle.x &&
@@ -286,7 +295,6 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
         ball.y = paddle.y - ball.h;
         ball.vy = -Math.abs(ball.vy);
 
-        // Modulación angular según el impacto relativo (-1 a 1)
         const hitOffset =
           (ball.x + ball.w / 2 - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
         const currentSpeed = LEVELS[currentLevel - 1]?.speed ?? 1.0;
@@ -322,7 +330,7 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
               onGameOverRef.current?.(score);
             }
           }
-          break; // Un bloque por fotograma
+          break;
         }
       }
 
@@ -347,13 +355,15 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
     };
 
     const draw = () => {
-      // Fondo negro de la cabina
-      ctx.fillStyle = "#000000";
+      const p = paletteRef.current;
+
+      // 1. Limpieza de fondo con luminancia de modo oscuro estricta (<= 0.06)
+      ctx.fillStyle = p.background;
       ctx.fillRect(0, 0, W, H);
 
-      // Rejilla sutil retro de fondo
+      // 2. Rejilla retro vectorial según el skin activo
       ctx.save();
-      ctx.strokeStyle = "rgba(0, 240, 255, 0.035)";
+      ctx.strokeStyle = p.gridLine;
       ctx.lineWidth = 1;
       const step = 40;
       for (let x = step; x < W; x += step) {
@@ -370,10 +380,26 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
       }
       ctx.restore();
 
-      // Renderizado de bloques
+      // 3. Estela fosforescente de la bola (sólo activa con resplandor neón/retro)
+      if (p.ball.glowBlur > 0 && ballTrail.length > 1) {
+        ctx.save();
+        for (let i = 1; i < ballTrail.length; i++) {
+          const pt = ballTrail[i];
+          const alpha = (1 - i / ballTrail.length) * 0.35;
+          const r = (ball.w / 2) * (1 - (i / ballTrail.length) * 0.45);
+          ctx.fillStyle = p.ball.fill;
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, Math.max(1, r), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // 4. Renderizado de bloques
       for (const b of blocks) {
         if (!b.alive) continue;
-        if (ssLoaded && ssImg) {
+        if (p.useSpritesheet && ssLoaded && ssImg) {
           const sp = SPRITES.blocks[b.color];
           if (sp) {
             ctx.drawImage(
@@ -389,27 +415,52 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
             );
           }
         } else {
-          // Fallback vectorial con resplandor neón
-          const hex = COLOR_MAP[b.color] || "#ffffff";
+          // Renderizado procedural vectorial adaptado al skin
+          const hex = p.blockColors[b.color] || p.paddle.fill;
           ctx.save();
           ctx.fillStyle = hex;
-          ctx.shadowColor = hex;
-          ctx.shadowBlur = 8;
+          ctx.shadowColor =
+            p.blockGlowColor !== "transparent" ? hex : "transparent";
+          ctx.shadowBlur = p.blockGlowBlur;
           ctx.beginPath();
           ctx.roundRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2, 3);
           ctx.fill();
+
+          // Bisel de luz superior-izquierdo para relieve arcade
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(b.x + 2, b.y + b.h - 3);
+          ctx.lineTo(b.x + 2, b.y + 2);
+          ctx.lineTo(b.x + b.w - 3, b.y + 2);
+          ctx.stroke();
+
+          // Sombra inferior-derecha
+          ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+          ctx.beginPath();
+          ctx.moveTo(b.x + b.w - 2, b.y + 2);
+          ctx.lineTo(b.x + b.w - 2, b.y + b.h - 2);
+          ctx.lineTo(b.x + 2, b.y + b.h - 2);
+          ctx.stroke();
           ctx.restore();
         }
       }
 
-      // Renderizado de explosiones
+      // 5. Renderizado de explosiones
       for (const exp of explosions) {
         const frameIndex = Math.min(
           Math.floor((exp.elapsed / EXPLOSION_DURATION) * 4),
           3
         );
         const frames = EXPLOSION_FRAMES[exp.color];
-        if (ssLoaded && ssImg && frames && frames[frameIndex]) {
+        if (
+          p.useSpritesheet &&
+          ssLoaded &&
+          ssImg &&
+          frames &&
+          frames[frameIndex]
+        ) {
           const f = frames[frameIndex];
           ctx.drawImage(
             ssImg,
@@ -423,26 +474,43 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
             exp.h
           );
         } else {
-          // Fallback de partículas
-          const hex = COLOR_MAP[exp.color] || "#ffffff";
+          // Partículas procedurales y onda expansiva cromática
+          const pProgress = exp.elapsed / EXPLOSION_DURATION;
+          const alpha = Math.max(0, 1 - pProgress);
+          const hex = p.blockColors[exp.color] || p.paddle.fill;
           ctx.save();
           ctx.fillStyle = hex;
-          ctx.shadowColor = hex;
-          ctx.shadowBlur = 10;
-          const pProgress = exp.elapsed / EXPLOSION_DURATION;
-          const pSize = Math.max(2, (exp.w / 4) * (1 - pProgress));
-          ctx.fillRect(
-            exp.x + exp.w / 2 - pSize / 2,
-            exp.y + exp.h / 2 - pSize / 2,
-            pSize,
-            pSize
+          ctx.shadowColor =
+            p.blockGlowColor !== "transparent" ? hex : "transparent";
+          ctx.shadowBlur = p.blockGlowBlur;
+          ctx.globalAlpha = alpha;
+
+          // Fragmentos despedidos radialmente
+          const fragments = 6;
+          for (let i = 0; i < fragments; i++) {
+            const angle = (i / fragments) * Math.PI * 2;
+            const dist = pProgress * 26;
+            const px = exp.x + exp.w / 2 + Math.cos(angle) * dist * 1.35;
+            const py = exp.y + exp.h / 2 + Math.sin(angle) * dist;
+            const pSize = Math.max(2, 6 * (1 - pProgress));
+            ctx.fillRect(px - pSize / 2, py - pSize / 2, pSize, pSize);
+          }
+
+          // Onda de choque sutil
+          ctx.strokeStyle = hex;
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(
+            exp.x - pProgress * 4,
+            exp.y - pProgress * 3,
+            exp.w + pProgress * 8,
+            exp.h + pProgress * 6
           );
           ctx.restore();
         }
       }
 
-      // Renderizado de la paleta Vaus
-      if (ssLoaded && ssImg) {
+      // 6. Renderizado de la paleta Vaus
+      if (p.useSpritesheet && ssLoaded && ssImg) {
         const sp = SPRITES.paddle;
         ctx.drawImage(
           ssImg,
@@ -457,17 +525,32 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
         );
       } else {
         ctx.save();
-        ctx.fillStyle = "#00f0ff";
-        ctx.shadowColor = "#00f0ff";
-        ctx.shadowBlur = 10;
+        ctx.fillStyle = p.paddle.fill;
+        ctx.strokeStyle = p.paddle.stroke;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = p.paddle.glowColor;
+        ctx.shadowBlur = p.paddle.glowBlur;
+
+        // Cápsula Vaus estilizada con bordes biselados
         ctx.beginPath();
         ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 6);
         ctx.fill();
+        ctx.stroke();
+
+        // Núcleo de energía de la cápsula
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = p.paddle.accent;
+        ctx.fillRect(paddle.x + 8, paddle.y + 4, paddle.w - 16, 2);
+
+        // Disipadores laterales de fotones
+        ctx.fillStyle = p.paddle.stroke;
+        ctx.fillRect(paddle.x + 2, paddle.y + 3, 4, paddle.h - 6);
+        ctx.fillRect(paddle.x + paddle.w - 6, paddle.y + 3, 4, paddle.h - 6);
         ctx.restore();
       }
 
-      // Renderizado de la bola
-      if (ssLoaded && ssImg) {
+      // 7. Renderizado de la bola de plasma
+      if (p.useSpritesheet && ssLoaded && ssImg) {
         const sp = SPRITES.ball;
         ctx.drawImage(
           ssImg,
@@ -482,9 +565,9 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
         );
       } else {
         ctx.save();
-        ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "#00f0ff";
-        ctx.shadowBlur = 12;
+        ctx.fillStyle = p.ball.fill;
+        ctx.shadowColor = p.ball.glowColor;
+        ctx.shadowBlur = p.ball.glowBlur;
         ctx.beginPath();
         ctx.arc(
           ball.x + ball.w / 2,
@@ -494,6 +577,21 @@ export const ArkanoidGame: FC<CabinetGameProps> = ({
           Math.PI * 2
         );
         ctx.fill();
+
+        // Núcleo blanco de alta energía
+        if (p.ball.glowBlur > 0) {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(
+            ball.x + ball.w / 2 - 2,
+            ball.y + ball.h / 2 - 2,
+            ball.w / 5,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
         ctx.restore();
       }
     };

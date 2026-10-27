@@ -152,7 +152,7 @@ export const GameRoomOverlay: FC<GameRoomOverlayProps> = ({
                 <span className="material-symbols-outlined text-[16px]">
                   palette
                 </span>
-                SELECCIONAR SKIN DE LA CABINA [TECLA S]
+                SELECCIONAR SKIN DE LA CABINA [TECLA T]
               </span>
               <SkinSelector
                 currentSkin={currentSkin}

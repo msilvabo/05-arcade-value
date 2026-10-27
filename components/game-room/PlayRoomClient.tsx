@@ -19,6 +19,7 @@ interface PlayRoomClientProps {
 
 export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const isAsteroids = gameId === "asteroids-2084" || gameId === "asteroids";
+  const isTetris = gameId === "cyber-tetris-99" || gameId === "tetris";
   const gameConfig = getGameConfig(gameId);
   const hasGame = hasGameCabinetComponent(gameId);
 
@@ -97,9 +98,9 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
       } else if (
         e.key === "t" ||
         e.key === "T" ||
-        (isAsteroids && (e.key === "s" || e.key === "S"))
+        (!isTetris && (e.key === "s" || e.key === "S"))
       ) {
-        // En Asteroids 'S' y 'T' cambian de tema al vuelo
+        // 'T' (Tema) y 'S' (Skin) cambian de tema al vuelo (salvo 'S' en Tetris por caída suave)
         e.preventDefault();
         cycleSkin();
       }
@@ -107,7 +108,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isGameOver, isAsteroids, cycleSkin]);
+  }, [isGameOver, isTetris, cycleSkin]);
 
   const handleScoreIncrement = (pts: number) => {
     setScore((prev) => prev + pts);

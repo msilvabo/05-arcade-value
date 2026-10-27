@@ -27,14 +27,14 @@ Para que un juego cumpla con el estándar de calidad visual de Arcade Vault, deb
 
 ## 📊 Matriz de Cumplimiento de Skins
 
-| ID / Slug               | Título                 | Clásico (Default) |      Neón       | Retro (Ámbar / Verde) | Modo Oscuro AAA |   Estado Global   | Archivo de Paleta         |
-| :---------------------- | :--------------------- | :---------------: | :-------------: | :-------------------: | :-------------: | :---------------: | :------------------------ |
-| `asteroids-2084`        | ASTEROIDS 2084         |  ✅ Implementado  | ✅ Implementado |    ✅ Implementado    |   ✅ Aprobado   | ✅ 3/3 (Completo) | `asteroids-2084/skins.ts` |
-| `arkanoid-neon-revenge` | ARKANOID: NEON REVENGE |   ⚠️ Hardcoded    |   ⚠️ Parcial    |     ❌ Pendiente      |   ✅ Aprobado   | ⚠️ 1/3 (Parcial)  | Pendiente `skins.ts`      |
-| `chrono-snake`          | CHRONO SNAKE           |   ⚠️ Hardcoded    |  ❌ Pendiente   |     ❌ Pendiente      |   ✅ Aprobado   | ⚠️ 1/3 (Parcial)  | Pendiente `skins.ts`      |
-| `cyber-tetris-99`       | CYBER TETRIS 99        |   ⚠️ Hardcoded    |  ❌ Pendiente   |     ❌ Pendiente      |   ✅ Aprobado   | ⚠️ 1/3 (Parcial)  | Pendiente `skins.ts`      |
-| `space-invaders-galaxy` | SPACE INVADERS: GALAXY |    🚧 Cartucho    |   🚧 Cartucho   |      🚧 Cartucho      |     🚧 N/A      |  🚧 Próximamente  | En desarrollo             |
-| `pacman-neon-maze`      | PAC-MAN: NEON MAZE     |    🚧 Cartucho    |   🚧 Cartucho   |      🚧 Cartucho      |     🚧 N/A      |  🚧 Próximamente  | En desarrollo             |
+| ID / Slug               | Título                 | Clásico (Default) |      Neón       | Retro (Ámbar / Verde) | Modo Oscuro AAA |   Estado Global   | Archivo de Paleta                |
+| :---------------------- | :--------------------- | :---------------: | :-------------: | :-------------------: | :-------------: | :---------------: | :------------------------------- |
+| `asteroids-2084`        | ASTEROIDS 2084         |  ✅ Implementado  | ✅ Implementado |    ✅ Implementado    |   ✅ Aprobado   | ✅ 3/3 (Completo) | `asteroids-2084/skins.ts`        |
+| `arkanoid-neon-revenge` | ARKANOID: NEON REVENGE |  ✅ Implementado  | ✅ Implementado |    ✅ Implementado    |   ✅ Aprobado   | ✅ 3/3 (Completo) | `arkanoid-neon-revenge/skins.ts` |
+| `chrono-snake`          | CHRONO SNAKE           |   ⚠️ Hardcoded    |  ❌ Pendiente   |     ❌ Pendiente      |   ✅ Aprobado   | ⚠️ 1/3 (Parcial)  | Pendiente `skins.ts`             |
+| `cyber-tetris-99`       | CYBER TETRIS 99        |  ✅ Implementado  | ✅ Implementado |    ✅ Implementado    |   ✅ Aprobado   | ✅ 3/3 (Completo) | `cyber-tetris-99/skins.ts`       |
+| `space-invaders-galaxy` | SPACE INVADERS: GALAXY |    🚧 Cartucho    |   🚧 Cartucho   |      🚧 Cartucho      |     🚧 N/A      |  🚧 Próximamente  | En desarrollo                    |
+| `pacman-neon-maze`      | PAC-MAN: NEON MAZE     |    🚧 Cartucho    |   🚧 Cartucho   |      🚧 Cartucho      |     🚧 N/A      |  🚧 Próximamente  | En desarrollo                    |
 
 ---
 

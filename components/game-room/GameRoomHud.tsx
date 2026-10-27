@@ -132,7 +132,7 @@ export const GameRoomHud: FC<GameRoomHudProps> = ({
               <span className="material-symbols-outlined text-[14px]">
                 palette
               </span>
-              SKIN [S]:
+              SKIN [T]:
             </span>
             <SkinSelector
               currentSkin={skin}
