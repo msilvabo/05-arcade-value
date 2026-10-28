@@ -9,6 +9,7 @@ import { tetrisModule } from "../_games/cyber-tetris-99";
 import { spaceInvadersModule } from "../_games/space-invaders-galaxy";
 import { pacmanModule } from "../_games/pacman-neon-maze";
 import { snakeModule } from "../_games/chrono-snake";
+import { cyberFroggerActionModule } from "../_games/cyber-frogger-action";
 
 const GAME_MODULES: GameModule[] = [
   arkanoidModule,
@@ -17,6 +18,7 @@ const GAME_MODULES: GameModule[] = [
   pacmanModule,
   snakeModule,
   asteroidsModule,
+  cyberFroggerActionModule,
 ];
 
 // Mapa indexado por ID canónico y todos sus alias

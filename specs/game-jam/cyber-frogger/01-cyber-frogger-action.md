@@ -1,6 +1,6 @@
 # Spec GJ-01: Creación del Juego Cyber-Frogger: Data Highway Protocol (Acción / Reflejos) en Cabina CRT
 
-**Estado:** Borrador  
+**Estado:** Implementado  
 **Fecha:** 2026-10-27  
 **Tema del Jam:** "Cyber-Frogger"  
 **Depende de:** 06-adaptacion-juego-asteroids.md, 07-leaderboard-y-tabla-de-juegos.md

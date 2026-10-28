@@ -24,6 +24,7 @@ interface PlayRoomClientProps {
 export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const isAsteroids = gameId === "asteroids-2084" || gameId === "asteroids";
   const isTetris = gameId === "cyber-tetris-99" || gameId === "tetris";
+  const isFrogger = gameId === "cyber-frogger-action" || gameId === "cyber-frogger" || gameId === "frogger";
   const gameConfig = getGameConfig(gameId);
   const hasGame = hasGameCabinetComponent(gameId);
 
@@ -109,7 +110,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
       } else if (
         e.key === "t" ||
         e.key === "T" ||
-        (!isTetris && (e.key === "s" || e.key === "S"))
+        (!isTetris && !isFrogger && (e.key === "s" || e.key === "S"))
       ) {
         // 'T' (Tema) y 'S' (Skin) cambian de tema al vuelo (salvo 'S' en Tetris por caída suave)
         e.preventDefault();
@@ -171,7 +172,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
       />
 
       {/* Escenario Principal del Gabinete Arcade CRT */}
-      <main className="relative w-full py-space-md lg:py-space-xl px-space-sm md:px-space-md flex flex-col items-center justify-center overflow-hidden flex-1">
+      <main className="relative w-full py-space-sm md:py-space-md px-space-sm md:px-space-md flex flex-col items-center overflow-x-hidden flex-1">
         {/* Resplandores ambientales de tubos catódicos */}
         <div className="absolute w-[680px] h-[680px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none -top-24"></div>
         <div className="absolute w-[500px] h-[500px] bg-secondary-container/15 rounded-full blur-[120px] pointer-events-none -bottom-20"></div>
