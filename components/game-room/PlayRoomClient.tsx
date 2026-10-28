@@ -1,10 +1,11 @@
 "use client";
 
-import { FC, useState, useEffect, useCallback } from "react";
+import { FC, useState, useEffect, useCallback, useMemo } from "react";
 import { GameRoomHud } from "@/components/game-room/GameRoomHud";
 import { CrtCabinet } from "@/components/game-room/CrtCabinet";
 import { GameRoomOverlay } from "@/components/game-room/GameRoomOverlay";
 import { SkinSelector } from "@/components/game-room/SkinSelector";
+import { PerformanceMonitor } from "@/components/game-room/PerformanceMonitor";
 import { getHighScore, saveGameScore } from "@/lib/scores";
 import {
   CabinetGameHost,
@@ -24,7 +25,10 @@ interface PlayRoomClientProps {
 export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const isAsteroids = gameId === "asteroids-2084" || gameId === "asteroids";
   const isTetris = gameId === "cyber-tetris-99" || gameId === "tetris";
-  const isFrogger = gameId === "cyber-frogger-action" || gameId === "cyber-frogger" || gameId === "frogger";
+  const isFrogger =
+    gameId === "cyber-frogger-action" ||
+    gameId === "cyber-frogger" ||
+    gameId === "frogger";
   const gameConfig = getGameConfig(gameId);
   const hasGame = hasGameCabinetComponent(gameId);
 
@@ -46,6 +50,7 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
   const [volume, setVolume] = useState<number>(0.7);
   const [scanlinesActive, setScanlinesActive] = useState<boolean>(true);
   const [curvatureActive, setCurvatureActive] = useState<boolean>(true);
+  const [perfMonitorActive, setPerfMonitorActive] = useState<boolean>(false);
   const [restartSignal, setRestartSignal] = useState<number>(0);
   const [skin, setSkin] = useState<GameSkinId>("clasico");
   const [retroVariant, setRetroVariant] =
@@ -120,23 +125,64 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isGameOver, isTetris, cycleSkin]);
+  }, [isGameOver, isTetris, isFrogger, cycleSkin]);
 
-  const handleScoreIncrement = (pts: number) => {
+  const handleScoreIncrement = useCallback((pts: number) => {
     setScore((prev) => prev + pts);
-  };
+  }, []);
 
-  const handleScoreChange = (newScore: number) => {
+  const handleScoreChange = useCallback((newScore: number) => {
     setScore(newScore);
-  };
+  }, []);
 
-  const handleGameOver = async (finalScore: number) => {
-    setIsGameOver(true);
-    const result = await saveGameScore(gameId, finalScore);
-    if (result.isNewRecord) {
-      setHighScore(result.highScore);
-    }
-  };
+  const handleLivesChange = useCallback((l: number) => {
+    setLives(l);
+  }, []);
+
+  const handleLevelChange = useCallback((lvl: number) => {
+    setLevel(lvl);
+  }, []);
+
+  const handleGameOver = useCallback(
+    async (finalScore: number) => {
+      setIsGameOver(true);
+      const result = await saveGameScore(gameId, finalScore);
+      if (result.isNewRecord) {
+        setHighScore(result.highScore);
+      }
+    },
+    [gameId]
+  );
+
+  const gameProps = useMemo(
+    () => ({
+      isPaused: isPaused || isGameOver,
+      onScoreIncrement: handleScoreIncrement,
+      onScoreChange: handleScoreChange,
+      onLivesChange: handleLivesChange,
+      onLevelChange: handleLevelChange,
+      onGameOver: handleGameOver,
+      restartSignal,
+      audioOn,
+      volume,
+      skin,
+      retroVariant,
+    }),
+    [
+      isPaused,
+      isGameOver,
+      handleScoreIncrement,
+      handleScoreChange,
+      handleLivesChange,
+      handleLevelChange,
+      handleGameOver,
+      restartSignal,
+      audioOn,
+      volume,
+      skin,
+      retroVariant,
+    ]
+  );
 
   const handleRestart = () => {
     setScore(0);
@@ -174,8 +220,14 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
       {/* Escenario Principal del Gabinete Arcade CRT */}
       <main className="relative w-full py-space-sm md:py-space-md px-space-sm md:px-space-md flex flex-col items-center overflow-x-hidden flex-1">
         {/* Resplandores ambientales de tubos catódicos */}
-        <div className="absolute w-[680px] h-[680px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none -top-24"></div>
-        <div className="absolute w-[500px] h-[500px] bg-secondary-container/15 rounded-full blur-[120px] pointer-events-none -bottom-20"></div>
+        <div
+          className="absolute w-[680px] h-[680px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none -top-24"
+          style={{ willChange: "transform", transform: "translateZ(0)" }}
+        ></div>
+        <div
+          className="absolute w-[500px] h-[500px] bg-secondary-container/15 rounded-full blur-[120px] pointer-events-none -bottom-20"
+          style={{ willChange: "transform", transform: "translateZ(0)" }}
+        ></div>
 
         {/* Chasis Arcade Exterior con CRT Monitor */}
         <div className="relative w-full max-w-4xl flex justify-center">
@@ -183,23 +235,14 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
             scanlinesActive={scanlinesActive}
             curvatureActive={curvatureActive}
           >
+            {/* Monitor de Telemetría Arcade */}
+            <PerformanceMonitor
+              visible={perfMonitorActive}
+              onToggle={setPerfMonitorActive}
+            />
+
             {hasGame ? (
-              <CabinetGameHost
-                gameId={gameId}
-                gameProps={{
-                  isPaused: isPaused || isGameOver,
-                  onScoreIncrement: handleScoreIncrement,
-                  onScoreChange: handleScoreChange,
-                  onLivesChange: (l) => setLives(l),
-                  onLevelChange: (lvl) => setLevel(lvl),
-                  onGameOver: handleGameOver,
-                  restartSignal: restartSignal,
-                  audioOn: audioOn,
-                  volume: volume,
-                  skin: skin,
-                  retroVariant: retroVariant,
-                }}
-              />
+              <CabinetGameHost gameId={gameId} gameProps={gameProps} />
             ) : (
               <div className="relative w-full h-[520px] bg-surface-container-lowest flex flex-col items-center justify-center text-center p-6">
                 <span className="material-symbols-outlined text-[64px] text-tertiary animate-pulse mb-4">
@@ -271,6 +314,18 @@ export const PlayRoomClient: FC<PlayRoomClientProps> = ({ gameId }) => {
               }`}
             >
               CURVATURA {curvatureActive ? "ON" : "OFF"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPerfMonitorActive((prev) => !prev)}
+              className={`px-2 py-1 rounded text-[11px] font-label-sm uppercase transition-all cursor-pointer ${
+                perfMonitorActive
+                  ? "bg-primary-container text-on-primary font-bold shadow-[0_0_8px_rgba(0,245,255,0.6)]"
+                  : "bg-surface-container-highest text-outline"
+              }`}
+              title="Alternar telemetría de rendimiento y FPS (F3)"
+            >
+              FPS {perfMonitorActive ? "ON" : "OFF"}
             </button>
             <button
               type="button"

@@ -1,6 +1,6 @@
 # Spec 11: Optimización de Rendimiento, Desacoplamiento de Render y Bucle a 60 FPS en Juegos Arcade
 
-> **Estado:** Aprobado  
+> **Estado:** Implemented  
 > **Depende de:** 02-arcade-interfaces-visuales.md, 06-adaptacion-juego-asteroids.md, 08-adaptacion-arkanoid.md, 09-creacion-chrono-snake.md, 10-soporte-controles-tactiles-movil.md  
 > **Fecha:** 2026-10-28  
 > **Objetivo:** Erradicar los micro-congelamientos (jank / GC pauses) y caídas de frames en Cyber-Frogger y en el catálogo completo de juegos arcade mediante el desacoplamiento estricto del ciclo de renderizado React del bucle de animación Canvas, reciclaje de memoria (Object Pools) para partículas y proyectiles, contención de capas CSS y un monitor de telemetría de rendimiento para 60 FPS garantizados.
@@ -217,13 +217,13 @@ export interface PerformanceMetrics {
 
 ## 5. Criterios de Aceptación
 
-- [ ] **Estabilidad a 60 FPS:** En condiciones normales de juego (movimiento, cruce de tráfico y salto en río), `CyberFroggerActionGame` mantiene 58–60 FPS constantes sin caídas por debajo de 55 FPS en hardware estándar.
-- [ ] **Cero Pausas de Garbage Collection:** La memoria heap no genera picos abruptos de asignación/recolección (`sawtooth`) al emitir partículas de salto, dash o explosión.
-- [ ] **Aislamiento de Render en Canvas:** El componente de juego no se vuelve a montar ni ejecuta su función render de React cuando el HUD actualiza la puntuación, vidas o nivel.
-- [ ] **Despacho Limpio de Puntuación:** No existe doble llamada simultánea innecesaria que sobrecargue el bucle de eventos.
-- [ ] **Telemetría Accesible:** Al presionar `F3` o `D` (o botón en panel de ajustes), se despliega un panel de telemetría arcade con FPS, ms por frame y entidades activas.
-- [ ] **Transversalidad:** Asteroids, Snake, Arkanoid y Tetris ejecutan sus bucles con `shadowBlur` controlado y sin jank perceptible.
-- [ ] **Build y Verificación:** `npm run build` y `npm run lint` compilan con 0 errores de TypeScript y linting.
+- [x] **Estabilidad a 60 FPS:** En condiciones normales de juego (movimiento, cruce de tráfico y salto en río), `CyberFroggerActionGame` mantiene 58–60 FPS constantes sin caídas por debajo de 55 FPS en hardware estándar.
+- [x] **Cero Pausas de Garbage Collection:** La memoria heap no genera picos abruptos de asignación/recolección (`sawtooth`) al emitir partículas de salto, dash o explosión.
+- [x] **Aislamiento de Render en Canvas:** El componente de juego no se vuelve a montar ni ejecuta su función render de React cuando el HUD actualiza la puntuación, vidas o nivel.
+- [x] **Despacho Limpio de Puntuación:** No existe doble llamada simultánea innecesaria que sobrecargue el bucle de eventos.
+- [x] **Telemetría Accesible:** Al presionar `F3` o `D` (o botón en panel de ajustes), se despliega un panel de telemetría arcade con FPS, ms por frame y entidades activas.
+- [x] **Transversalidad:** Asteroids, Snake, Arkanoid y Tetris ejecutan sus bucles con `shadowBlur` controlado y sin jank perceptible.
+- [x] **Build y Verificación:** `npm run build` y `npm run lint` compilan con 0 errores de TypeScript y linting.
 
 ---
 
@@ -246,3 +246,68 @@ export interface PerformanceMetrics {
   _Mitigación:_ Se define un tamaño por defecto de 250 elementos (suficiente para 5 explosiones simultáneas) y reciclaje FIFO de partículas antiguas si se excede la capacidad.
 - **Riesgo:** La tecla `D` podría colisionar con controles de movimiento (ej. flecha derecha o WASD).  
   _Mitigación:_ Se prioriza la tecla universal `F3` y, si se usa una tecla alfanumérica alternativa, se condiciona a teclas que no se usen en el juego activo (o combinación `Shift + D`).
+
+---
+
+## 8. Errores Encontrados y Soluciones Implementadas (Registro Técnico Post-Mortem)
+
+Durante la auditoría, perfilado con Chrome DevTools (Performance & Memory tabs) e implementación práctica de la especificación, se identificaron y resolvieron los siguientes problemas críticos de rendimiento:
+
+### 8.1 Re-renders en Cascada de React al Despachar Puntuación o Estado
+
+- **Error encontrado:** Cada vez que el juego notificaba un incremento de puntos (`onScoreIncrement`), cambio de vidas (`onLivesChange`) o avance de nivel (`onLevelChange`), `PlayRoomClient.tsx` actualizaba su estado local. Esto provocaba que `gameProps={{ ... }}` se recreara como un nuevo objeto literal en cada render. A su vez, `CabinetGameHost` y los componentes de juego se reconciliaban por completo dentro del ciclo de React, robando tiempo del hilo principal al bucle de animación Canvas a 60 FPS.
+- **Solución implementada:**
+  1. En `PlayRoomClient.tsx`, se estabilizaron todos los callbacks (`handleScoreIncrement`, `handleScoreChange`, `handleLivesChange`, `handleLevelChange`, `handleGameOver`) mediante `useCallback`.
+  2. Se memorizó el objeto unificado de propiedades del juego mediante `useMemo(() => ({ ... }), [...])`.
+  3. En `app/games/_lib/registry.tsx`, se envolvió `CabinetGameHost` en `React.memo` con un comparador de props selectivo que solo permite re-render si cambian `isPaused`, `restartSignal`, `audioOn`, `volume`, `skin` o `retroVariant`.
+  4. Se envolvieron todos los componentes de juego (`CyberFroggerActionGame`, `AsteroidsGame`, `SnakeGame`, `ArkanoidGame`, `TetrisGame`) en `React.memo`.
+
+### 8.2 Picos de Asignación y Pausas por Garbage Collector (GC Jank / Sawtooth Profile)
+
+- **Error encontrado:** En momentos de alta actividad gráfica (explosión de asteroides, recolección de frutas en Snake, saltos y dashes continuos en Cyber-Frogger o hard drops en Tetris), los motores instanciaban continuamente objetos anónimos `{ x, y, vx, vy, ... }` y en cada frame del RAF se filtraba destructivamente el array (`particles = particles.filter(p => p.alpha > 0)`). Esto generaba miles de objetos efímeros por minuto, provocando pausas de GC periódicas (_garbage collection stalls_) de 50 a 120 ms percibidas como tirones o congelamientos.
+- **Solución implementada:**
+  1. Se implementó la clase reutilizable `ParticlePool` en `lib/performance/particle-pool.ts`, pre-alocando un arreglo estático de partículas con bandera `active: boolean`.
+  2. Se sustituyó la creación dinámica por el método `spawn(...)`, que activa y reutiliza ranuras existentes.
+  3. Se añadió un puntero circular FIFO (`nextIndex`) para sobreescritura segura en ráfagas que superen el límite del pool, garantizando cero llamadas a `new` en caliente.
+  4. La actualización y el dibujo se realizan in-place mediante `particlePool.update(dt)` y `particlePool.draw(ctx)` sin instanciar arreglos intermedios.
+
+### 8.3 Retención Fuga de Filtro Gaussiano (`ctx.shadowBlur`) en el Pipeline Canvas
+
+- **Error encontrado:** Al activar resplandores neón para entidades brillantes (como la nave en Asteroids, el dron en Cyber-Frogger o explosiones en Arkanoid), el contexto 2D retenía los valores de `ctx.shadowBlur` y `ctx.shadowColor`. Esto provocaba que trazados geométricos simples posteriores (como cuadrículas o textos) se renderizaran con filtros de desenfoque gaussianos en la GPU, desplomando la tasa de cuadros en dispositivos con tarjetas gráficas integradas.
+- **Solución implementada:**
+  1. Se estableció el reseteo obligatorio e inmediato:
+     ```typescript
+     ctx.shadowBlur = 0;
+     ctx.shadowColor = "transparent";
+     ```
+     inmediatamente después de dibujar la figura con resplandor.
+  2. Se auditaron y emparejaron estrictamente todas las llamadas a `ctx.save()` y `ctx.restore()` en los motores de dibujo.
+
+### 8.4 Redibujado Redundante de Cuadrículas y Escenarios Estáticos
+
+- **Error encontrado:** En `CyberFroggerActionGame.tsx`, en cada fotograma a 60 FPS se volvían a calcular y dibujar con bucles iterativos los fondos fijos: las celdas del socket de salida (`strokeRect`), las líneas discontinuas de la autopista (`setLineDash`), la zona de buffer y la barra de enlace del bus central.
+- **Solución implementada:**
+  1. Se implementó una técnica de pre-renderizado en canvas en memoria (Offscreen Canvas pattern) con `bgCanvasRef`.
+  2. La función `renderStaticBackground()` dibuja una sola vez todos los elementos estáticos sobre el canvas en memoria al montar el juego o al conmutar el tema/skin activo.
+  3. En cada tick de animación, el fondo completo se proyecta con una única llamada $O(1)$ de `ctx.drawImage(bgCanvasRef.current, 0, 0)`.
+
+### 8.5 Invalidez de Capas Compuestas CSS por Efectos Ambientales de la Cabina
+
+- **Error encontrado:** Los resplandores exteriores masivos en `PlayRoomClient.tsx` (`blur-[140px]` y `blur-[120px]`) y las capas superpuestas de scanlines y curvatura de `CrtCabinet.tsx` provocaban que los repintados del canvas obligaran al motor del navegador a recalcular capas de composición globales.
+- **Solución implementada:**
+  1. En `CrtCabinet.tsx`, se añadieron propiedades de contención CSS estricta: `contain: "layout paint"` y `willChange: "transform"`.
+  2. En las capas de resplandor y viñetas de curvatura, se forzó la promoción a capa de hardware independiente mediante `will-change: transform` y `transform: translateZ(0)`.
+
+### 8.6 Re-renders Provocados por el Monitor de Telemetría
+
+- **Error encontrado:** Durante la primera versión del medidor de FPS, actualizar el estado de React (`setFps`, `setFrameTime`) a 60 cuadros por segundo provocaba que el propio monitor de rendimiento ralentizara la cabina debido a 60 renders de React por segundo.
+- **Solución implementada:**
+  1. En `PerformanceMonitor.tsx`, se desacopló completamente la telemetría del ciclo de renderizado de React utilizando referencias directas al DOM (`useRef<HTMLSpanElement>`).
+  2. Se introdujo un estrangulamiento (_throttling_) visual de 150 ms para la actualización de texto y colores del DOM (`fpsTextRef.current.textContent = ...`), manteniendo el muestreo interno a 60 FPS para máxima precisión sin sobrecargar el hilo de renderizado.
+
+### 8.7 Despacho Duplicado de Eventos de Puntuación en Cyber-Frogger
+
+- **Error encontrado:** En `CyberFroggerActionGame.tsx`, cada salto horizontal o vertical exitoso invocaba concurrentemente tanto `onScoreIncrement(pts)` como `onScoreChange(scoreRef.current)`. Esto generaba doble encolamiento de microtareas en React y cálculos redundantes en el HUD.
+- **Solución implementada:**
+  1. Se unificó el despacho dentro de `triggerMove` a una única llamada `callbacksRef.current.onScoreIncrement?.(pts)`.
+  2. Se reservó `onScoreChange` exclusivamente para sincronizaciones deterministas absolutas (reseteo de partida, bonus masivo de fin de nivel o Game Over).

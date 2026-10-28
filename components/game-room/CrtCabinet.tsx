@@ -39,15 +39,31 @@ export const CrtCabinet: FC<CrtCabinetProps> = ({
         className={`relative w-full aspect-[4/3] max-h-[640px] bg-surface-dim overflow-hidden shadow-[inset_0_0_50px_rgba(0,0,0,0.95)] flex flex-col justify-between border sm:border-2 border-outline-variant/40 select-none touch-none ${
           curvatureActive ? "rounded-xl sm:rounded-3xl" : "rounded-lg"
         }`}
-        style={{ touchAction: "none" }}
+        style={{
+          touchAction: "none",
+          contain: "layout paint",
+          willChange: "transform",
+        }}
       >
         {/* Viñeta de curvatura y reflejo de cristal catódico */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-10"></div>
-        <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-to-tr from-transparent via-primary/5 to-transparent rotate-12 pointer-events-none z-10"></div>
+        <div
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.85)_100%)] pointer-events-none z-10"
+          style={{ willChange: "transform", transform: "translateZ(0)" }}
+        ></div>
+        <div
+          className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-to-tr from-transparent via-primary/5 to-transparent rotate-12 pointer-events-none z-10"
+          style={{ willChange: "transform", transform: "translateZ(0)" }}
+        ></div>
 
         {/* Scanlines opcionales de cabina */}
         {scanlinesActive && (
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.4)_50%)] bg-[length:100%_4px] pointer-events-none z-20 opacity-80"></div>
+          <div
+            className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.4)_50%)] bg-[length:100%_4px] pointer-events-none z-20 opacity-80"
+            style={{
+              willChange: "opacity, transform",
+              transform: "translateZ(0)",
+            }}
+          ></div>
         )}
 
         {/* Contenido del Escenario Arkanoid */}

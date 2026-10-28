@@ -1,6 +1,7 @@
 "use client";
 
-import { FC, useEffect, useRef } from "react";
+import React, { FC, useEffect, useRef } from "react";
+import { ParticlePool } from "@/lib/performance/particle-pool";
 import { CabinetGameProps } from "../../_lib/types";
 import {
   FRUITS_IMAGE_SRC,
@@ -13,6 +14,7 @@ const H = 600;
 const CELL_SIZE = 25;
 const GRID_COLS = W / CELL_SIZE; // 32
 const GRID_ROWS = H / CELL_SIZE; // 24
+const TOTAL_CELLS = GRID_COLS * GRID_ROWS;
 
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 
@@ -21,24 +23,13 @@ interface Coord {
   y: number;
 }
 
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  color: string;
-  size: number;
-  alpha: number;
-  decay: number;
-}
-
 interface ActiveFood {
   position: Coord;
   fruit: FruitDefinition;
   spawnTime: number;
 }
 
-export const SnakeGame: FC<CabinetGameProps> = ({
+const SnakeGameComponent: FC<CabinetGameProps> = ({
   isPaused,
   onScoreIncrement,
   onScoreChange,
@@ -89,14 +80,11 @@ export const SnakeGame: FC<CabinetGameProps> = ({
     };
   }, []);
 
-  // Bucle principal del juego
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    ctx.imageSmoothingEnabled = false;
 
     // Estado del juego
     const snake: Coord[] = [
@@ -105,17 +93,45 @@ export const SnakeGame: FC<CabinetGameProps> = ({
       { x: 8, y: 12 },
     ];
     let currentDir: Direction = "RIGHT";
-    const dirQueue: Direction[] = [];
-
+    let nextDir: Direction = "RIGHT";
     let score = 0;
-    let level = 1;
     let fruitsEaten = 0;
+    let level = 1;
     let gameOver = false;
-    let tickAccumulator = 0;
+
+    // Variables de tiempo acumulado y RAF
+    let tickTimer = 0;
     let lastTime: number | null = null;
     let totalTime = 0;
 
-    const particles: Particle[] = [];
+    const particlePool = new ParticlePool(150);
+
+    // Pre-renderizado en Offscreen Canvas del fondo y rejilla O(1)
+    const bgCanvas = document.createElement("canvas");
+    bgCanvas.width = W;
+    bgCanvas.height = H;
+    const bgCtx = bgCanvas.getContext("2d");
+    if (bgCtx) {
+      bgCtx.fillStyle = "#050811";
+      bgCtx.fillRect(0, 0, W, H);
+
+      bgCtx.strokeStyle = "rgba(0, 240, 255, 0.035)";
+      bgCtx.lineWidth = 1;
+      bgCtx.beginPath();
+      for (let x = 0; x <= W; x += CELL_SIZE) {
+        bgCtx.moveTo(x, 0);
+        bgCtx.lineTo(x, H);
+      }
+      for (let y = 0; y <= H; y += CELL_SIZE) {
+        bgCtx.moveTo(0, y);
+        bgCtx.lineTo(W, y);
+      }
+      bgCtx.stroke();
+
+      bgCtx.strokeStyle = "rgba(0, 240, 255, 0.25)";
+      bgCtx.lineWidth = 2;
+      bgCtx.strokeRect(1, 1, W - 2, H - 2);
+    }
 
     // Notificaciones iniciales de cabina
     onLivesChangeRef.current?.(1);
@@ -127,27 +143,47 @@ export const SnakeGame: FC<CabinetGameProps> = ({
       return Math.max(0.045, 0.13 - (lvl - 1) * 0.012);
     };
 
-    // Función para generar comida en una casilla libre
-    const spawnFood = (): ActiveFood => {
-      const occupied = new Set<string>();
-      snake.forEach((seg) => occupied.add(`${seg.x},${seg.y}`));
+    // Buffer plano reutilizable para cálculo de celdas libres sin instanciar strings ni Sets (Zero-Alloc)
+    const gridOccupied = new Uint8Array(TOTAL_CELLS);
 
-      const emptyCoords: Coord[] = [];
-      for (let r = 0; r < GRID_ROWS; r++) {
-        for (let c = 0; c < GRID_COLS; c++) {
-          if (!occupied.has(`${c},${r}`)) {
-            emptyCoords.push({ x: c, y: r });
+    const spawnFood = (): ActiveFood => {
+      gridOccupied.fill(0);
+      for (let i = 0; i < snake.length; i++) {
+        const seg = snake[i];
+        if (
+          seg.x >= 0 &&
+          seg.x < GRID_COLS &&
+          seg.y >= 0 &&
+          seg.y < GRID_ROWS
+        ) {
+          gridOccupied[seg.y * GRID_COLS + seg.x] = 1;
+        }
+      }
+
+      let freeCount = 0;
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        if (gridOccupied[i] === 0) freeCount++;
+      }
+
+      let chosenIndex = 0;
+      if (freeCount > 0) {
+        let target = Math.floor(Math.random() * freeCount);
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+          if (gridOccupied[i] === 0) {
+            if (target === 0) {
+              chosenIndex = i;
+              break;
+            }
+            target--;
           }
         }
       }
 
-      const pos =
-        emptyCoords.length > 0
-          ? emptyCoords[Math.floor(Math.random() * emptyCoords.length)]
-          : { x: 0, y: 0 };
-
       return {
-        position: pos,
+        position: {
+          x: chosenIndex % GRID_COLS,
+          y: Math.floor(chosenIndex / GRID_COLS),
+        },
         fruit: getRandomFruit(),
         spawnTime: totalTime,
       };
@@ -155,7 +191,7 @@ export const SnakeGame: FC<CabinetGameProps> = ({
 
     let food = spawnFood();
 
-    // Emisión de partículas
+    // Emisión de partículas mediante Object Pool sin allocs
     const spawnParticles = (
       x: number,
       y: number,
@@ -165,16 +201,16 @@ export const SnakeGame: FC<CabinetGameProps> = ({
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 40 + Math.random() * 120;
-        particles.push({
+        particlePool.spawn(
           x,
           y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          2 + Math.random() * 3,
           color,
-          size: 2 + Math.random() * 3,
-          alpha: 1,
-          decay: 1.2 + Math.random() * 1.5,
-        });
+          1.2 + Math.random() * 1.5,
+          1.0
+        );
       }
     };
 
@@ -188,79 +224,69 @@ export const SnakeGame: FC<CabinetGameProps> = ({
 
       if (gameOver) return;
 
-      let requestedDir: Direction | null = null;
-      if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") {
-        requestedDir = "UP";
-      } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") {
-        requestedDir = "DOWN";
-      } else if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
-        requestedDir = "LEFT";
-      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
-        requestedDir = "RIGHT";
-      }
-
-      if (!requestedDir) return;
-
-      // Comprobar contra la última dirección planificada para evitar giro 180°
-      const lastPlannedDir =
-        dirQueue.length > 0 ? dirQueue[dirQueue.length - 1] : currentDir;
-
-      const isOpposite =
-        (requestedDir === "UP" && lastPlannedDir === "DOWN") ||
-        (requestedDir === "DOWN" && lastPlannedDir === "UP") ||
-        (requestedDir === "LEFT" && lastPlannedDir === "RIGHT") ||
-        (requestedDir === "RIGHT" && lastPlannedDir === "LEFT");
-
-      if (
-        !isOpposite &&
-        requestedDir !== lastPlannedDir &&
-        dirQueue.length < 2
-      ) {
-        dirQueue.push(requestedDir);
+      switch (e.key) {
+        case "ArrowUp":
+        case "w":
+        case "W":
+          if (currentDir !== "DOWN") nextDir = "UP";
+          break;
+        case "ArrowDown":
+        case "s":
+        case "S":
+          if (currentDir !== "UP") nextDir = "DOWN";
+          break;
+        case "ArrowLeft":
+        case "a":
+        case "A":
+          if (currentDir !== "RIGHT") nextDir = "LEFT";
+          break;
+        case "ArrowRight":
+        case "d":
+        case "D":
+          if (currentDir !== "LEFT") nextDir = "RIGHT";
+          break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
-    // Actualización de física / ticks
+    // Bucle de lógica (Tick de movimiento y colisiones)
     const update = (dt: number) => {
-      totalTime += dt;
-
-      // Actualizar partículas
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.alpha -= p.decay * dt;
-        if (p.alpha <= 0) {
-          particles.splice(i, 1);
-        }
-      }
-
       if (gameOver) return;
 
-      const tickInterval = getTickInterval(level);
-      tickAccumulator += dt;
+      totalTime += dt;
+      tickTimer += dt;
+      particlePool.update(dt);
 
-      while (tickAccumulator >= tickInterval && !gameOver) {
-        tickAccumulator -= tickInterval;
+      const interval = getTickInterval(level);
 
-        // Procesar siguiente dirección de la cola
-        if (dirQueue.length > 0) {
-          currentDir = dirQueue.shift()!;
-        }
+      while (tickTimer >= interval) {
+        tickTimer -= interval;
 
-        // Calcular nueva posición de la cabeza
+        // Actualizar dirección
+        currentDir = nextDir;
+
+        // 1. Calcular nueva cabeza
         const head = snake[0];
         let nextX = head.x;
         let nextY = head.y;
 
-        if (currentDir === "UP") nextY -= 1;
-        else if (currentDir === "DOWN") nextY += 1;
-        else if (currentDir === "LEFT") nextX -= 1;
-        else if (currentDir === "RIGHT") nextX += 1;
+        switch (currentDir) {
+          case "UP":
+            nextY -= 1;
+            break;
+          case "DOWN":
+            nextY += 1;
+            break;
+          case "LEFT":
+            nextX -= 1;
+            break;
+          case "RIGHT":
+            nextX += 1;
+            break;
+        }
 
-        // 1. Detección de colisión con muros sólidos
+        // 2. Comprobar colisiones con bordes del tablero
         if (
           nextX < 0 ||
           nextX >= GRID_COLS ||
@@ -273,14 +299,20 @@ export const SnakeGame: FC<CabinetGameProps> = ({
             head.x * CELL_SIZE + CELL_SIZE / 2,
             head.y * CELL_SIZE + CELL_SIZE / 2,
             "#ff0055",
-            30
+            35
           );
           onGameOverRef.current?.(score);
           break;
         }
 
-        // 2. Detección de colisión con el propio cuerpo
-        const hitSelf = snake.some((seg) => seg.x === nextX && seg.y === nextY);
+        // Comprobar colisión consigo misma (bucle for sin closure ni allocs)
+        let hitSelf = false;
+        for (let i = 0; i < snake.length; i++) {
+          if (snake[i].x === nextX && snake[i].y === nextY) {
+            hitSelf = true;
+            break;
+          }
+        }
 
         if (hitSelf) {
           gameOver = true;
@@ -304,8 +336,8 @@ export const SnakeGame: FC<CabinetGameProps> = ({
           score += pts;
           fruitsEaten += 1;
 
+          // Despacho limpio y unificado de puntuación (evita dual render)
           onScoreIncrementRef.current?.(pts);
-          onScoreChangeRef.current?.(score);
 
           // Partículas de impacto neón con el color temático de la fruta
           spawnParticles(
@@ -333,46 +365,19 @@ export const SnakeGame: FC<CabinetGameProps> = ({
 
     // Renderizado en Canvas
     const draw = () => {
-      ctx.save();
-      ctx.clearRect(0, 0, W, H);
+      // 1. Blit O(1) de fondo y rejilla pre-renderizada
+      ctx.drawImage(bgCanvas, 0, 0);
 
-      // Fondo base arcade oscuro
-      ctx.fillStyle = "#050811";
-      ctx.fillRect(0, 0, W, H);
-
-      // Cuadrícula sutil neón
-      ctx.strokeStyle = "rgba(0, 240, 255, 0.035)";
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= W; x += CELL_SIZE) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, H);
-        ctx.stroke();
-      }
-      for (let y = 0; y <= H; y += CELL_SIZE) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-      }
-
-      // Marco perimetral neón de advertencia (muros sólidos mortales)
-      ctx.strokeStyle = "rgba(0, 240, 255, 0.25)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, W - 2, H - 2);
-
-      // Renderizado de Fruta
+      // 2. Renderizado de Fruta con resplandor pulsante
       const fx = food.position.x * CELL_SIZE;
       const fy = food.position.y * CELL_SIZE;
       const pulse = Math.sin(totalTime * 6) * 3;
 
-      // Resplandor de base de la fruta
       ctx.save();
       ctx.shadowColor = food.fruit.colorFallback;
       ctx.shadowBlur = 12 + pulse;
 
       if (imgLoadedRef.current && fruitsImgRef.current) {
-        // Renderizado del sprite recortado
         ctx.drawImage(
           fruitsImgRef.current,
           food.fruit.x,
@@ -385,7 +390,6 @@ export const SnakeGame: FC<CabinetGameProps> = ({
           CELL_SIZE - 2
         );
       } else {
-        // Fallback gráfico procedimental
         ctx.fillStyle = food.fruit.colorFallback;
         ctx.beginPath();
         ctx.arc(
@@ -399,8 +403,13 @@ export const SnakeGame: FC<CabinetGameProps> = ({
       }
       ctx.restore();
 
-      // Renderizado de la Serpiente
-      snake.forEach((seg, index) => {
+      // Reseteo estricto de sombras
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+
+      // 3. Renderizado de la Serpiente
+      for (let index = 0; index < snake.length; index++) {
+        const seg = snake[index];
         const sx = seg.x * CELL_SIZE;
         const sy = seg.y * CELL_SIZE;
         const isHead = index === 0;
@@ -414,6 +423,10 @@ export const SnakeGame: FC<CabinetGameProps> = ({
           ctx.beginPath();
           ctx.roundRect(sx + 1, sy + 1, CELL_SIZE - 2, CELL_SIZE - 2, 6);
           ctx.fill();
+
+          // Reseteo de sombra antes de los ojos para evitar doble filtrado gaussiano
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = "transparent";
 
           // Ojos neón direccionales
           ctx.fillStyle = "#ffffff";
@@ -458,27 +471,23 @@ export const SnakeGame: FC<CabinetGameProps> = ({
           ctx.roundRect(sx + 2, sy + 2, CELL_SIZE - 4, CELL_SIZE - 4, 4);
           ctx.fill();
 
+          // Reseteo de sombra antes del núcleo brillante
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = "transparent";
+
           // Núcleo brillante interior
           ctx.fillStyle = `rgba(180, 255, 220, ${0.3 * factor})`;
           ctx.fillRect(sx + 7, sy + 7, CELL_SIZE - 14, CELL_SIZE - 14);
         }
         ctx.restore();
-      });
+      }
 
-      // Renderizado de Partículas
-      particles.forEach((p) => {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
+      // Reseteo estricto de sombra antes de partículas
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
 
-      ctx.restore();
+      // 4. Renderizado de Partículas mediante Object Pool
+      particlePool.draw(ctx);
     };
 
     // Bucle requestAnimationFrame
@@ -508,13 +517,24 @@ export const SnakeGame: FC<CabinetGameProps> = ({
     <div
       ref={containerRef}
       className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden select-none"
+      style={{
+        contain: "layout paint",
+        willChange: "transform",
+      }}
     >
       <canvas
         ref={canvasRef}
         width={W}
         height={H}
         className="w-full h-full object-contain [image-rendering:pixelated]"
+        style={{
+          transform: "translateZ(0)",
+          willChange: "transform",
+        }}
       />
     </div>
   );
 };
+
+export const SnakeGame = React.memo(SnakeGameComponent);
+SnakeGame.displayName = "SnakeGame";

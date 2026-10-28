@@ -1,8 +1,9 @@
 "use client";
 
-import { FC, useEffect, useRef } from "react";
+import React, { FC, useEffect, useRef } from "react";
 import { CabinetGameProps } from "../../_lib/types";
 import { AsteroidsSkinPalette, getAsteroidsSkinPalette } from "./skins";
+import { ParticlePool } from "@/lib/performance/particle-pool";
 
 export type AsteroidsGameProps = CabinetGameProps;
 
@@ -312,51 +313,7 @@ class Ship {
   }
 }
 
-class Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  ttl: number;
-  dead: boolean;
-  color: string;
-
-  constructor(x: number, y: number, color = "#00f5ff") {
-    this.x = x;
-    this.y = y;
-    const angle = rand(0, Math.PI * 2);
-    const speed = rand(30, 140);
-    this.vx = Math.cos(angle) * speed;
-    this.vy = Math.sin(angle) * speed;
-    this.life = rand(0.4, 1.1);
-    this.ttl = this.life;
-    this.dead = false;
-    this.color = color;
-  }
-
-  update(dt: number) {
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
-    this.ttl -= dt;
-    if (this.ttl <= 0) this.dead = true;
-  }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    const alpha = Math.max(0, this.ttl / this.life);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.x - this.vx * 0.05, this.y - this.vy * 0.05);
-    ctx.stroke();
-    ctx.restore();
-  }
-}
-
-export const AsteroidsGame: FC<AsteroidsGameProps> = ({
+const AsteroidsGameComponent: FC<AsteroidsGameProps> = ({
   isPaused,
   onScoreChange,
   onLivesChange,
@@ -404,7 +361,7 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
     let ship = new Ship();
     let bullets: Bullet[] = [];
     let asteroids: Asteroid[] = [];
-    let particles: Particle[] = [];
+    const particlePool = new ParticlePool(250);
     let powerUps: PowerUp[] = [];
 
     let score = 0;
@@ -460,7 +417,19 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
       const pColors = paletteRef.current.particles;
       for (let i = 0; i < count; i++) {
         const color = pColors[Math.floor(Math.random() * pColors.length)];
-        particles.push(new Particle(x, y, color));
+        const angle = rand(0, Math.PI * 2);
+        const speed = rand(30, 140);
+        const life = rand(0.4, 1.1);
+        particlePool.spawn(
+          x,
+          y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          rand(1.5, 3),
+          color,
+          1 / life,
+          1.0
+        );
       }
     };
 
@@ -483,7 +452,7 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
       level++;
       onLevelChangeRef.current?.(level);
       bullets = [];
-      particles = [];
+      particlePool.clear();
       powerUps = [];
       powerUpSpawned = false;
       killsSinceSpawn = 0;
@@ -495,7 +464,7 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
       ship = new Ship();
       bullets = [];
       asteroids = [];
-      particles = [];
+      particlePool.clear();
       powerUps = [];
       powerUpSpawned = false;
       killsSinceSpawn = 0;
@@ -517,15 +486,13 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
       if (isPausedRef.current) return;
 
       if (state === "gameover") {
-        particles.forEach((p) => p.update(dt));
-        particles = particles.filter((p) => !p.dead);
+        particlePool.update(dt);
         return;
       }
 
       if (state === "dead") {
         deadTimer -= dt;
-        particles.forEach((p) => p.update(dt));
-        particles = particles.filter((p) => !p.dead);
+        particlePool.update(dt);
         asteroids.forEach((a) => a.update(dt));
         if (deadTimer <= 0) {
           state = "playing";
@@ -542,11 +509,10 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
       ship.update(dt, keys);
       bullets.forEach((b) => b.update(dt));
       asteroids.forEach((a) => a.update(dt));
-      particles.forEach((p) => p.update(dt));
+      particlePool.update(dt);
       powerUps.forEach((p) => p.update(dt));
 
       bullets = bullets.filter((b) => !b.dead);
-      particles = particles.filter((p) => !p.dead);
       powerUps = powerUps.filter((p) => !p.dead);
 
       // Colisión nave vs power-up
@@ -625,7 +591,7 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
         ctx.stroke();
       }
 
-      particles.forEach((pt) => pt.draw(ctx));
+      particlePool.draw(ctx);
       asteroids.forEach((a) => a.draw(ctx, p));
       powerUps.forEach((pu) => pu.draw(ctx, p));
       bullets.forEach((b) => b.draw(ctx, p));
@@ -644,6 +610,8 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
           18,
           28
         );
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
         ctx.restore();
       }
     };
@@ -678,3 +646,6 @@ export const AsteroidsGame: FC<AsteroidsGameProps> = ({
     </div>
   );
 };
+
+export const AsteroidsGame = React.memo(AsteroidsGameComponent);
+AsteroidsGame.displayName = "AsteroidsGame";

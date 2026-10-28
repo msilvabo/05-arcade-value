@@ -1,8 +1,9 @@
 "use client";
 
-import React, { FC, useEffect, useRef } from "react";
+import React, { FC, useEffect, useRef, useCallback } from "react";
 import { CabinetGameProps } from "../../_lib/types";
 import { getCyberFroggerSkinPalette } from "./skins";
+import { ParticlePool } from "@/lib/performance/particle-pool";
 
 // Dimensiones de cuadrícula según Spec GJ-01
 const CANVAS_WIDTH = 800;
@@ -97,7 +98,7 @@ export interface CyberFrogEntity {
   respawnTimer: number;
 }
 
-export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
+const CyberFroggerActionGameComponent: FC<CabinetGameProps> = ({
   isPaused,
   onScoreIncrement,
   onScoreChange,
@@ -109,13 +110,72 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
   retroVariant = "amber",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Paleta dinámica resuelta O(1)
   const paletteRef = useRef(getCyberFroggerSkinPalette(skin, retroVariant));
 
+  const renderStaticBackground = useCallback(() => {
+    let bg = bgCanvasRef.current;
+    if (!bg) {
+      bg = document.createElement("canvas");
+      bg.width = CANVAS_WIDTH;
+      bg.height = CANVAS_HEIGHT;
+      bgCanvasRef.current = bg;
+    }
+    const bgCtx = bg.getContext("2d");
+    if (!bgCtx) return;
+
+    const pal = paletteRef.current;
+    bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Fondo base oscuro
+    bgCtx.fillStyle = pal.background;
+    bgCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // --- ZONA 1: Socket de Inicio (Filas 13 a 14) ---
+    bgCtx.fillStyle = pal.zones.startSocket.fill;
+    bgCtx.fillRect(0, 13 * CELL_SIZE, CANVAS_WIDTH, 2 * CELL_SIZE);
+    bgCtx.strokeStyle = pal.zones.startSocket.gridStroke;
+    bgCtx.lineWidth = 1;
+    for (let c = 0; c < GRID_COLS; c++) {
+      bgCtx.strokeRect(c * CELL_SIZE, 13 * CELL_SIZE, CELL_SIZE, 2 * CELL_SIZE);
+    }
+
+    // --- ZONA 2: Autopista de Datos (Filas 8 a 12) ---
+    bgCtx.fillStyle = pal.zones.highway.fill;
+    bgCtx.fillRect(0, 8 * CELL_SIZE, CANVAS_WIDTH, 5 * CELL_SIZE);
+
+    bgCtx.strokeStyle = pal.zones.highway.laneLine;
+    bgCtx.lineWidth = 1;
+    bgCtx.setLineDash([8, 8]);
+    for (let r = 9; r <= 12; r++) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, r * CELL_SIZE);
+      bgCtx.lineTo(CANVAS_WIDTH, r * CELL_SIZE);
+      bgCtx.stroke();
+    }
+    bgCtx.setLineDash([]);
+
+    // --- ZONA 3: Buffer Cache Safe Zone (Fila 7) ---
+    bgCtx.fillStyle = pal.zones.bufferZone.fill;
+    bgCtx.fillRect(0, 7 * CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
+    bgCtx.strokeStyle = pal.zones.bufferZone.border;
+    bgCtx.lineWidth = 2;
+    bgCtx.strokeRect(0, 7 * CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
+
+    // --- ZONA 5: Core Bus Link (Fila 1) ---
+    bgCtx.fillStyle = pal.zones.coreBus.fill;
+    bgCtx.fillRect(0, CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
+    bgCtx.strokeStyle = pal.zones.coreBus.border;
+    bgCtx.lineWidth = 1.5;
+    bgCtx.strokeRect(0, CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
+  }, []);
+
   useEffect(() => {
     paletteRef.current = getCyberFroggerSkinPalette(skin, retroVariant);
-  }, [skin, retroVariant]);
+    renderStaticBackground();
+  }, [skin, retroVariant, renderStaticBackground]);
 
   // Referencias a callbacks para invocar dentro del loop sin recrear listeners
   const scoreRef = useRef(0);
@@ -166,7 +226,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
   const hazardsRef = useRef<HighwayHazardEntity[]>([]);
   const platformsRef = useRef<FloatingPlatformEntity[]>([]);
   const nodesRef = useRef<MasterNodeEntity[]>([]);
-  const particlesRef = useRef<ParticleEntity[]>([]);
+  const particlePoolRef = useRef(new ParticlePool(250));
   const roundTimerRef = useRef(ROUND_TIME_INITIAL);
   const nodesPenetratedRef = useRef(0);
   const keysPressedRef = useRef<{ [k: string]: boolean }>({});
@@ -382,16 +442,16 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
     for (let i = 0; i < 30; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 40 + Math.random() * 160;
-      particlesRef.current.push({
+      particlePoolRef.current.spawn(
         x,
         y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: 2 + Math.random() * 3,
-        alpha: 1.0,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        decay: 1.2 + Math.random() * 0.8,
-      });
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
+        2 + Math.random() * 3,
+        colors[Math.floor(Math.random() * colors.length)],
+        1.2 + Math.random() * 0.8,
+        1.0
+      );
     }
   };
 
@@ -410,6 +470,11 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
       callbacksRef.current.onGameOver?.(scoreRef.current);
     }
   };
+
+  const killFrogRef = useRef(killFrog);
+  useEffect(() => {
+    killFrogRef.current = killFrog;
+  });
 
   // Movimiento ortogonal
   const triggerMove = (
@@ -452,19 +517,18 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
       // Partículas según paleta
       const pal = paletteRef.current;
       for (let p = 0; p < 12; p++) {
-        particlesRef.current.push({
-          x: f.visualX + (Math.random() - 0.5) * 20,
-          y: f.visualY + (Math.random() - 0.5) * 20,
-          vx: (Math.random() - 0.5) * 60,
-          vy: (Math.random() - 0.5) * 60,
-          size: 3,
-          alpha: 1,
-          color:
-            pal.particles.dash[
-              Math.floor(Math.random() * pal.particles.dash.length)
-            ],
-          decay: 2.5,
-        });
+        particlePoolRef.current.spawn(
+          f.visualX + (Math.random() - 0.5) * 20,
+          f.visualY + (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 60,
+          (Math.random() - 0.5) * 60,
+          3,
+          pal.particles.dash[
+            Math.floor(Math.random() * pal.particles.dash.length)
+          ],
+          2.5,
+          1.0
+        );
       }
     }
 
@@ -475,7 +539,6 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
       const pts = rowsAdvanced * 10;
       scoreRef.current += pts;
       callbacksRef.current.onScoreIncrement?.(pts);
-      callbacksRef.current.onScoreChange?.(scoreRef.current);
     }
   };
 
@@ -492,6 +555,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
 
     initNodes();
     initEntities(1);
+    particlePoolRef.current.clear();
     spawnFrog(true);
   }, [restartSignal]);
 
@@ -564,7 +628,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
         if (!f.dead) {
           roundTimerRef.current -= dt;
           if (roundTimerRef.current <= 0) {
-            killFrog();
+            killFrogRef.current();
           }
 
           // Cooldown de Cyber-Dash
@@ -649,7 +713,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
               if (f.visualX >= pLeft && f.visualX <= pRight) {
                 if (p.type === "HEAT_SINK" && p.submerged) {
                   // Muerte por disipador sobrecalentado sumergido
-                  killFrog();
+                  killFrogRef.current();
                 } else {
                   // Arrastre con la plataforma
                   onPlatform = true;
@@ -660,7 +724,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
 
                   // Muerte por colisión con el chasis lateral
                   if (f.visualX < 10 || f.visualX > CANVAS_WIDTH - 10) {
-                    killFrog();
+                    killFrogRef.current();
                   }
                 }
                 break;
@@ -670,7 +734,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
 
           if (!onPlatform && !f.dead) {
             // Se hundió en el refrigerante de plasma a 600°C
-            killFrog();
+            killFrogRef.current();
           }
         }
 
@@ -701,7 +765,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
                 frogBox.bottom > hTop;
 
               if (isOverlap) {
-                killFrog();
+                killFrogRef.current();
                 break;
               }
             }
@@ -724,26 +788,22 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
               scoreRef.current += nodePoints;
 
               callbacksRef.current.onScoreIncrement?.(nodePoints);
-              callbacksRef.current.onScoreChange?.(scoreRef.current);
 
               // Chispas de éxito según paleta
               const pal = paletteRef.current;
               for (let c = 0; c < 24; c++) {
-                particlesRef.current.push({
-                  x: node.x + 20,
-                  y: node.y + 20,
-                  vx: (Math.random() - 0.5) * 180,
-                  vy: (Math.random() - 0.5) * 180,
-                  size: 3,
-                  alpha: 1,
-                  color:
-                    pal.particles.penetration[
-                      Math.floor(
-                        Math.random() * pal.particles.penetration.length
-                      )
-                    ],
-                  decay: 1.5,
-                });
+                particlePoolRef.current.spawn(
+                  node.x + 20,
+                  node.y + 20,
+                  (Math.random() - 0.5) * 180,
+                  (Math.random() - 0.5) * 180,
+                  3,
+                  pal.particles.penetration[
+                    Math.floor(Math.random() * pal.particles.penetration.length)
+                  ],
+                  1.5,
+                  1.0
+                );
               }
 
               // Comprobar si se completaron los 5 Nodos
@@ -751,7 +811,6 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
                 const completeBonus = 3000;
                 scoreRef.current += completeBonus;
                 callbacksRef.current.onScoreIncrement?.(completeBonus);
-                callbacksRef.current.onScoreChange?.(scoreRef.current);
 
                 const nextLvl = levelRef.current + 1;
                 levelRef.current = nextLvl;
@@ -769,17 +828,12 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
 
           if (!landedInNode && !f.dead) {
             // Cayó en los muros de contención entre bahías
-            killFrog();
+            killFrogRef.current();
           }
         }
 
-        // 8. Partículas
-        particlesRef.current.forEach((p) => {
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.alpha -= p.decay * dt;
-        });
-        particlesRef.current = particlesRef.current.filter((p) => p.alpha > 0);
+        // 8. Partículas (Object Pool libre de GC)
+        particlePoolRef.current.update(dt);
       }
 
       // ==========================================
@@ -789,40 +843,13 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
 
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-      // Fondo base oscuro
-      ctx.fillStyle = pal.background;
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-      // --- ZONA 1: Socket de Inicio (Filas 13 a 14) ---
-      ctx.fillStyle = pal.zones.startSocket.fill;
-      ctx.fillRect(0, 13 * CELL_SIZE, CANVAS_WIDTH, 2 * CELL_SIZE);
-      ctx.strokeStyle = pal.zones.startSocket.gridStroke;
-      ctx.lineWidth = 1;
-      for (let c = 0; c < GRID_COLS; c++) {
-        ctx.strokeRect(c * CELL_SIZE, 13 * CELL_SIZE, CELL_SIZE, 2 * CELL_SIZE);
+      // Dibujar fondo estático pre-renderizado (O(1) blit desde offscreen canvas)
+      if (bgCanvasRef.current) {
+        ctx.drawImage(bgCanvasRef.current, 0, 0);
+      } else {
+        renderStaticBackground();
+        if (bgCanvasRef.current) ctx.drawImage(bgCanvasRef.current, 0, 0);
       }
-
-      // --- ZONA 2: Autopista de Datos (Filas 8 a 12) ---
-      ctx.fillStyle = pal.zones.highway.fill;
-      ctx.fillRect(0, 8 * CELL_SIZE, CANVAS_WIDTH, 5 * CELL_SIZE);
-
-      ctx.strokeStyle = pal.zones.highway.laneLine;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([8, 8]);
-      for (let r = 9; r <= 12; r++) {
-        ctx.beginPath();
-        ctx.moveTo(0, r * CELL_SIZE);
-        ctx.lineTo(CANVAS_WIDTH, r * CELL_SIZE);
-        ctx.stroke();
-      }
-      ctx.setLineDash([]);
-
-      // --- ZONA 3: Buffer Cache Safe Zone (Fila 7) ---
-      ctx.fillStyle = pal.zones.bufferZone.fill;
-      ctx.fillRect(0, 7 * CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
-      ctx.strokeStyle = pal.zones.bufferZone.border;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(0, 7 * CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
 
       // --- ZONA 4: Refrigerante Térmico de Plasma (Filas 2 a 6) ---
       ctx.fillStyle = pal.zones.plasmaRiver.fill;
@@ -833,13 +860,6 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
         const waveX = (time * 0.05 + i * 110) % CANVAS_WIDTH;
         ctx.fillRect(waveX, 2 * CELL_SIZE, 60, 5 * CELL_SIZE);
       }
-
-      // --- ZONA 5: Core Bus Link (Fila 1) ---
-      ctx.fillStyle = pal.zones.coreBus.fill;
-      ctx.fillRect(0, CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
-      ctx.strokeStyle = pal.zones.coreBus.border;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(0, CELL_SIZE, CANVAS_WIDTH, CELL_SIZE);
 
       // --- ZONA 6: Nodos Maestros (Fila 0) ---
       ctx.fillStyle = pal.zones.masterNodesBar.fill;
@@ -964,16 +984,8 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
         }
       });
 
-      // --- RENDERIZAR PARTÍCULAS ---
-      particlesRef.current.forEach((p) => {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
+      // --- RENDERIZAR PARTÍCULAS (Object Pool) ---
+      particlePoolRef.current.draw(ctx);
 
       // --- RENDERIZAR DRON CYBER-FROG ---
       const f = frogRef.current;
@@ -1018,6 +1030,10 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
         ctx.shadowBlur = pal.glowBlur > 0 ? 8 : 0;
         ctx.fillRect(-8, -12, 16, 5);
 
+        // Reset explícito de sombras para evitar retención en el pipeline de la GPU
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
+
         ctx.restore();
       }
 
@@ -1029,7 +1045,7 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [isPaused]);
+  }, [isPaused, renderStaticBackground]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center bg-black select-none">
@@ -1048,3 +1064,8 @@ export const CyberFroggerActionGame: FC<CabinetGameProps> = ({
     </div>
   );
 };
+
+export const CyberFroggerActionGame = React.memo(
+  CyberFroggerActionGameComponent
+);
+CyberFroggerActionGame.displayName = "CyberFroggerActionGame";

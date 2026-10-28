@@ -60,12 +60,27 @@ export function hasGameCabinetComponent(idOrAlias: string): boolean {
 export const CabinetGameHost: FC<{
   gameId: string;
   gameProps: CabinetGameProps;
-}> = ({ gameId, gameProps }) => {
-  const mod = findGameModule(gameId);
-  if (!mod?.CabinetComponent) return null;
-  const Component = mod.CabinetComponent;
-  return <Component {...gameProps} />;
-};
+}> = React.memo(
+  function CabinetGameHost({ gameId, gameProps }) {
+    const mod = findGameModule(gameId);
+    if (!mod?.CabinetComponent) return null;
+    const Component = mod.CabinetComponent;
+    return <Component {...gameProps} />;
+  },
+  (prev, next) => {
+    if (prev.gameId !== next.gameId) return false;
+    const p = prev.gameProps;
+    const n = next.gameProps;
+    return (
+      p.isPaused === n.isPaused &&
+      p.restartSignal === n.restartSignal &&
+      p.audioOn === n.audioOn &&
+      p.volume === n.volume &&
+      p.skin === n.skin &&
+      p.retroVariant === n.retroVariant
+    );
+  }
+);
 
 export function getAvailableGameIds(): string[] {
   return GAME_MODULES.map((m) => m.id);

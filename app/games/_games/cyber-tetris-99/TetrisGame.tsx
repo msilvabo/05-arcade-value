@@ -1,6 +1,7 @@
 "use client";
 
-import { FC, useEffect, useRef, useCallback } from "react";
+import React, { FC, useEffect, useRef, useCallback } from "react";
+import { ParticlePool } from "@/lib/performance/particle-pool";
 import { CabinetGameProps } from "@/app/games/_lib/types";
 import {
   TETRIS_COLS,
@@ -28,23 +29,12 @@ interface Piece {
   y: number;
 }
 
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  color: string;
-  alpha: number;
-  decay: number;
-}
-
 interface FlashLine {
   row: number;
   alpha: number;
 }
 
-export const TetrisGame: FC<CabinetGameProps> = ({
+const TetrisGameComponent: FC<CabinetGameProps> = ({
   isPaused,
   onScoreChange,
   onLivesChange,
@@ -95,7 +85,7 @@ export const TetrisGame: FC<CabinetGameProps> = ({
   const levelRef = useRef<number>(1);
   const dropIntervalRef = useRef<number>(1000);
   const dropAccumRef = useRef<number>(0);
-  const particlesRef = useRef<Particle[]>([]);
+  const particlePoolRef = useRef(new ParticlePool(150));
   const flashLinesRef = useRef<FlashLine[]>([]);
 
   const randomPiece = useCallback((): Piece => {
@@ -145,16 +135,16 @@ export const TetrisGame: FC<CabinetGameProps> = ({
           palette.particles[
             Math.floor(Math.random() * palette.particles.length)
           ];
-        particlesRef.current.push({
-          x: xCenter,
-          y: yCenter,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: 2 + Math.random() * 3,
+        particlePoolRef.current.spawn(
+          xCenter,
+          yCenter,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          2 + Math.random() * 3,
           color,
-          alpha: 1,
-          decay: 1.5 + Math.random(),
-        });
+          1.5 + Math.random(),
+          1.0
+        );
       }
     }
   }, []);
@@ -254,16 +244,16 @@ export const TetrisGame: FC<CabinetGameProps> = ({
     for (let c = 0; c < current.shape[0].length; c++) {
       const pColor =
         palette.particles[Math.floor(Math.random() * palette.particles.length)];
-      particlesRef.current.push({
-        x: BOARD_X + (current.x + c) * BLOCK_SIZE + BLOCK_SIZE / 2,
-        y: BOARD_Y + (gy + current.shape.length) * BLOCK_SIZE,
-        vx: (Math.random() - 0.5) * 60,
-        vy: -20 - Math.random() * 40,
-        size: 2 + Math.random() * 2,
-        color: pColor,
-        alpha: 0.9,
-        decay: 2.2,
-      });
+      particlePoolRef.current.spawn(
+        BOARD_X + (current.x + c) * BLOCK_SIZE + BLOCK_SIZE / 2,
+        BOARD_Y + (gy + current.shape.length) * BLOCK_SIZE,
+        (Math.random() - 0.5) * 60,
+        -20 - Math.random() * 40,
+        2 + Math.random() * 2,
+        pColor,
+        2.2,
+        0.9
+      );
     }
 
     lockPiece();
@@ -320,7 +310,7 @@ export const TetrisGame: FC<CabinetGameProps> = ({
     dropIntervalRef.current = 1000;
     dropAccumRef.current = 0;
     isGameOverRef.current = false;
-    particlesRef.current = [];
+    particlePoolRef.current.clear();
     flashLinesRef.current = [];
 
     nextRef.current = randomPiece();
@@ -452,16 +442,8 @@ export const TetrisGame: FC<CabinetGameProps> = ({
           }
         }
 
-        // Actualizar partículas
-        for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-          const p = particlesRef.current[i];
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.alpha -= p.decay * dt;
-          if (p.alpha <= 0) {
-            particlesRef.current.splice(i, 1);
-          }
-        }
+        // Actualizar partículas (Object Pool)
+        particlePoolRef.current.update(dt);
 
         // Actualizar líneas flash
         for (let i = flashLinesRef.current.length - 1; i >= 0; i--) {
@@ -782,20 +764,8 @@ export const TetrisGame: FC<CabinetGameProps> = ({
       }
       ctx.restore();
 
-      // Renderizar partículas
-      particlesRef.current.forEach((p) => {
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
-        if (palette.glowBlur > 0) {
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 8;
-        }
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
+      // Renderizar partículas (Object Pool libre de GC)
+      particlePoolRef.current.draw(ctx);
 
       animFrameIdRef.current = requestAnimationFrame(loop);
     };
@@ -820,3 +790,6 @@ export const TetrisGame: FC<CabinetGameProps> = ({
     </div>
   );
 };
+
+export const TetrisGame = React.memo(TetrisGameComponent);
+TetrisGame.displayName = "TetrisGame";
