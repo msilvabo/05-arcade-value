@@ -14,7 +14,7 @@ import { ProfileRow } from "@/types/database";
 function mapAuthErrorToArcadeMessage(errorMsg: string): string {
   const normalized = errorMsg.toLowerCase();
   if (normalized.includes("invalid login credentials")) {
-    return "CREDENCIALES INVÁLIDAS // VERIFICA EMAIL Y CONTRASEÑA";
+    return "CREDENCIALES INVÁLIDAS // VERIFICA EMAIL, CONTRASEÑA O SI CONFIRMASTE TU CORREO";
   }
   if (normalized.includes("email not confirmed")) {
     return "CORREO NO CONFIRMADO // VALIDA EL ENLACE ENVIADO A TU BANDEJA";
@@ -69,10 +69,16 @@ export async function signUpPilot({
       };
     }
 
+    const hasSession = !!data.session;
+    const isConfirmed = !!data.user?.email_confirmed_at;
+
     return {
       success: true,
-      requiresEmailVerification: true,
-      message: "¡REGISTRO RECIBIDO! TRANSMISIÓN DE VERIFICACIÓN ENVIADA A TU CORREO.",
+      requiresEmailVerification: !hasSession && !isConfirmed,
+      message:
+        hasSession || isConfirmed
+          ? "¡REGISTRO EXITOSO! ACCEDIENDO AL VAULT..."
+          : "¡REGISTRO RECIBIDO! TRANSMISIÓN DE VERIFICACIÓN ENVIADA A TU CORREO.",
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Fallo de conexión";
