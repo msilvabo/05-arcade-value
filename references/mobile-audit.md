@@ -11,7 +11,7 @@
 | Categoría                                 | Total Auditado | ✅ Certificados | ⚠️ Con Observaciones | ❌ Críticos |
 | :---------------------------------------- | :------------: | :-------------: | :------------------: | :---------: |
 | **Vistas y Páginas del Sitio**            |       7        |        6        |          1           |      0      |
-| **Cartuchos Arcade (Controles Táctiles)** |       6        |        4        |          0           |      2      |
+| **Cartuchos Arcade (Controles Táctiles)** |       7        |        5        |          0           |      2      |
 
 ---
 
@@ -39,6 +39,7 @@ _Nota en `/leaderboard`: En pantallas ultra estrechas (< 380px), revisar padding
 | 🚀 **Asteroids 2084**         | `asteroids-2084`        | ✅ 2-Way + Fuego/Prop/Hiper |    ✅ Sí    |          N/A          |     ✅ Total      | ✅ Certificado  |
 | 🐍 **Chrono Snake**           | `chrono-snake`          |      ✅ 4-Way + Pausa       |    ✅ Sí    |          N/A          |     ✅ Total      | ✅ Certificado  |
 | 🟦 **Cyber Tetris 99**        | `cyber-tetris-99`       | ✅ 4-Way + Rotar/Drop/Hold  |    ✅ Sí    |          N/A          |     ✅ Total      | ✅ Certificado  |
+| 🐸 **Cyber Frogger Action**   | `cyber-frogger-action`  |    ✅ 4-Way + Dash/Pausa    |    ✅ Sí    |          N/A          |     ✅ Total      | ✅ Certificado  |
 | 🟡 **Pacman Neon Maze**       | `pacman-neon-maze`      |        🚧 Pendiente         |     🚧      |          🚧           |        🚧         | 🚧 Próximamente |
 | 👾 **Space Invaders Galaxy**  | `space-invaders-galaxy` |        🚧 Pendiente         |     🚧      |          🚧           |        🚧         | 🚧 Próximamente |
 
@@ -55,4 +56,5 @@ _Nota en `/leaderboard`: En pantallas ultra estrechas (< 380px), revisar padding
 
 ## 5. Historial de Auditorías
 
+- **2026-10-27:** Certificación y adaptación móvil de **Cyber Frogger Action** (Spec 10). Se configuró el Virtual Gamepad con D-Pad 4-way ortogonal para saltos, botón primario DASH (Espacio) en Cyan `lg` y botón PAUSA (Escape) en Ámbar `sm`. Blindaje de canvas con `touch-none` y `touchAction: none` para prevenir gestos accidentales del navegador.
 - **2026-10-27:** Auditoría inicial tras implementación de la Spec 10. Certificados controles táctiles en los 4 juegos jugables (`arkanoid-neon-revenge`, `asteroids-2084`, `chrono-snake`, `cyber-tetris-99`) y adaptaciones responsivas de cabina CRT en orientación Portrait y Landscape.

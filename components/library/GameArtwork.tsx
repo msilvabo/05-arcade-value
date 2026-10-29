@@ -264,6 +264,42 @@ export const GameArtwork: FC<GameArtworkProps> = ({ artType, title }) => {
         </svg>
       );
 
+    case "frogger":
+      return (
+        <svg
+          className="w-full h-full object-cover"
+          viewBox="0 0 320 180"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-label={title}
+        >
+          <rect fill="#0a0a14" height="180" width="320" />
+          <g fill="#00ff66">
+            <circle cx="40" cy="20" r="8" />
+            <circle cx="100" cy="20" r="8" />
+            <circle cx="160" cy="20" r="8" />
+            <circle cx="220" cy="20" r="8" />
+            <circle cx="280" cy="20" r="8" />
+          </g>
+          <rect fill="#1a0614" height="45" width="320" x="0" y="38" />
+          <rect fill="#00f0ff" height="10" rx="2" width="60" x="50" y="44" />
+          <rect fill="#ffb700" height="10" rx="2" width="80" x="180" y="44" />
+          <rect fill="#ff0055" height="10" rx="2" width="70" x="90" y="62" />
+          <rect fill="#0c0d18" height="55" width="320" x="0" y="90" />
+          <line stroke="rgba(0,240,255,0.2)" strokeDasharray="6 6" x1="0" x2="320" y1="115" y2="115" />
+          <rect fill="#ff0055" height="12" rx="2" width="45" x="30" y="98" />
+          <rect fill="#00f0ff" height="12" rx="2" width="35" x="150" y="98" />
+          <rect fill="#ffb700" height="12" rx="2" width="60" x="220" y="125" />
+          <g fill="#00ff66" transform="translate(160, 160)">
+            <rect height="12" rx="2" width="16" x="-8" y="-6" />
+            <rect height="6" rx="1" width="4" x="-12" y="-8" />
+            <rect height="6" rx="1" width="4" x="8" y="-8" />
+            <rect height="7" rx="1" width="5" x="-13" y="3" />
+            <rect height="7" rx="1" width="5" x="8" y="3" />
+            <rect fill="#00f0ff" height="3" width="10" x="-5" y="-7" />
+          </g>
+        </svg>
+      );
+
     default:
       return <div className="w-full h-full bg-surface-container-lowest" />;
   }

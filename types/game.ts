@@ -1,10 +1,5 @@
 export type GameCategory =
-  | "all"
-  | "shoot-em-up"
-  | "puzzle"
-  | "action-maze"
-  | "classics-80s"
-  | "popular";
+  "all" | "shoot-em-up" | "puzzle" | "action-maze" | "classics-80s" | "popular";
 
 export type GameDifficulty = "NORMAL" | "DIFÍCIL" | "HARDCORE";
 
@@ -27,7 +22,14 @@ export interface Game {
   difficulty: GameDifficulty;
   description: string;
   record: GameRecord;
-  artType: "arkanoid" | "tetris" | "space-invaders" | "pacman" | "snake" | "asteroids";
+  artType:
+    | "arkanoid"
+    | "tetris"
+    | "space-invaders"
+    | "pacman"
+    | "snake"
+    | "asteroids"
+    | "frogger";
   playsCount: number;
 }
 

@@ -2,6 +2,28 @@ import { GameVirtualControlsConfig } from "./types";
 
 export const GAME_VIRTUAL_CONTROLS: Record<string, GameVirtualControlsConfig> =
   {
+    "cyber-frogger-action": {
+      gameId: "cyber-frogger-action",
+      dpadType: "4-way",
+      primaryButtons: [
+        {
+          id: "dash",
+          label: "DASH",
+          sublabel: "ESPACIO",
+          key: "Space",
+          color: "cyan",
+          size: "lg",
+        },
+        {
+          id: "pause",
+          label: "PAUSA",
+          icon: "pause",
+          key: "Escape",
+          color: "amber",
+          size: "sm",
+        },
+      ],
+    },
     "chrono-snake": {
       gameId: "chrono-snake",
       dpadType: "4-way",
@@ -100,6 +122,10 @@ const ALIAS_MAP: Record<string, string> = {
   asteroids: "asteroids-2084",
   arkanoid: "arkanoid-neon-revenge",
   breakout: "arkanoid-neon-revenge",
+  "cyber-frogger": "cyber-frogger-action",
+  "frogger-action": "cyber-frogger-action",
+  frogger: "cyber-frogger-action",
+  "data-highway": "cyber-frogger-action",
 };
 
 export const getGameVirtualControls = (

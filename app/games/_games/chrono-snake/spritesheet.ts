@@ -264,6 +264,12 @@ export const FRUIT_DEFINITIONS: Record<string, FruitDefinition> = {
 
 export const ALL_FRUITS = Object.values(FRUIT_DEFINITIONS);
 
+export const COMMON_FRUITS = ALL_FRUITS.filter((f) => f.tier === "common");
+export const SPECIAL_FRUITS = ALL_FRUITS.filter((f) => f.tier === "special");
+export const LEGENDARY_FRUITS = ALL_FRUITS.filter(
+  (f) => f.tier === "legendary"
+);
+
 /**
  * Retorna una fruta aleatoria ponderada ligeramente por rareza:
  * 50% común, 35% especial, 15% legendaria.
@@ -272,11 +278,11 @@ export function getRandomFruit(): FruitDefinition {
   const rand = Math.random();
   let pool: FruitDefinition[];
   if (rand < 0.5) {
-    pool = ALL_FRUITS.filter((f) => f.tier === "common");
+    pool = COMMON_FRUITS;
   } else if (rand < 0.85) {
-    pool = ALL_FRUITS.filter((f) => f.tier === "special");
+    pool = SPECIAL_FRUITS;
   } else {
-    pool = ALL_FRUITS.filter((f) => f.tier === "legendary");
+    pool = LEGENDARY_FRUITS;
   }
   return pool[Math.floor(Math.random() * pool.length)];
 }

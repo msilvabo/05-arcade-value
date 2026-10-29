@@ -35,6 +35,7 @@ Para que un juego cumpla con el estándar de calidad visual de Arcade Vault, deb
 | `cyber-tetris-99`       | CYBER TETRIS 99        |  ✅ Implementado  | ✅ Implementado |    ✅ Implementado    |   ✅ Aprobado   | ✅ 3/3 (Completo) | `cyber-tetris-99/skins.ts`       |
 | `space-invaders-galaxy` | SPACE INVADERS: GALAXY |    🚧 Cartucho    |   🚧 Cartucho   |      🚧 Cartucho      |     🚧 N/A      |  🚧 Próximamente  | En desarrollo                    |
 | `pacman-neon-maze`      | PAC-MAN: NEON MAZE     |    🚧 Cartucho    |   🚧 Cartucho   |      🚧 Cartucho      |     🚧 N/A      |  🚧 Próximamente  | En desarrollo                    |
+| `cyber-frogger-action`  | CYBER FROGGER: DATA HIGHWAY |  ✅ Implementado  | ✅ Implementado |    ✅ Implementado    |   ✅ Aprobado   | ✅ 3/3 (Completo) | `cyber-frogger-action/skins.ts` |
 
 ---
 
