@@ -1,10 +1,13 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArcadeLogo } from "@/components/ui/ArcadeLogo";
 import { ArcadeIcon } from "@/components/ui/ArcadeIcon";
+import { createClient } from "@/lib/supabase/client";
+import { getCurrentPilotProfile, signOutPilot } from "@/lib/services/auth";
+import { AuthUserSession } from "@/types/auth";
 
 export interface NavbarProps {
   credits?: number;
@@ -25,6 +28,7 @@ export const Navbar: FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<AuthUserSession | null>(null);
 
   const isHome = pathname === "/";
   const isLibrary = pathname === "/library" || pathname === "/biblioteca";
@@ -33,6 +37,32 @@ export const Navbar: FC<NavbarProps> = ({
   const isAuth = pathname === "/auth";
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getCurrentPilotProfile().then((profile) => {
+      if (isMounted) setUser(profile);
+    });
+
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async () => {
+      const profile = await getCurrentPilotProfile();
+      if (isMounted) setUser(profile);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await signOutPilot();
+    setUser(null);
+    closeMobileMenu();
+  };
 
   return (
     <>
@@ -144,18 +174,38 @@ export const Navbar: FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* Auth / Account Link */}
-            <Link
-              href="/auth"
-              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-label-md text-label-md uppercase tracking-wider font-bold transition-all border ${
-                isAuth
-                  ? "bg-secondary-container text-on-secondary-container border-secondary shadow-[0_0_12px_rgba(255,0,110,0.4)]"
-                  : "bg-surface-container text-on-surface hover:border-primary/50 hover:text-primary-fixed border-outline-variant/40"
-              }`}
-            >
-              <ArcadeIcon name="person" className="w-4 h-4" />
-              <span>Iniciar Sesión</span>
-            </Link>
+            {/* Auth / Account Link or Authenticated Pilot Badge */}
+            {user ? (
+              <div className="hidden sm:inline-flex items-center gap-2">
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded font-label-md text-label-md uppercase tracking-wider font-bold bg-surface-container border border-primary-container/40 text-primary-fixed shadow-[0_0_12px_rgba(0,245,255,0.25)]"
+                  title={`Conectado como ${user.gamerTag} (${user.email})`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_#00f5ff]" />
+                  <span className="max-w-[130px] truncate">{user.gamerTag}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-1.5 rounded bg-surface-container hover:bg-secondary-container/20 text-on-surface-variant hover:text-secondary-container border border-outline-variant/30 transition-colors cursor-pointer flex items-center justify-center"
+                  title="Cerrar Sesión"
+                >
+                  <span className="material-symbols-outlined text-[18px]">logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-label-md text-label-md uppercase tracking-wider font-bold transition-all border ${
+                  isAuth
+                    ? "bg-secondary-container text-on-secondary-container border-secondary shadow-[0_0_12px_rgba(255,0,110,0.4)]"
+                    : "bg-surface-container text-on-surface hover:border-primary/50 hover:text-primary-fixed border-outline-variant/40"
+                }`}
+              >
+                <ArcadeIcon name="person" className="w-4 h-4" />
+                <span>Iniciar Sesión</span>
+              </Link>
+            )}
 
             {/* Mobile Hamburger Button */}
             <button
@@ -193,7 +243,7 @@ export const Navbar: FC<NavbarProps> = ({
             <button
               type="button"
               onClick={closeMobileMenu}
-              className="text-on-surface-variant hover:text-primary transition-colors text-lg font-mono p-1"
+              className="text-on-surface-variant hover:text-primary transition-colors text-lg font-mono p-1 cursor-pointer"
               aria-label="Cerrar Menú"
             >
               ✕
@@ -245,17 +295,43 @@ export const Navbar: FC<NavbarProps> = ({
             >
               ▸ Acerca de
             </Link>
-            <Link
-              href="/auth"
-              onClick={closeMobileMenu}
-              className={`px-3 py-2.5 rounded font-label-lg text-label-lg uppercase tracking-wider transition-colors ${
-                isAuth
-                  ? "bg-surface-container-high text-secondary font-bold border-l-2 border-secondary"
-                  : "text-on-surface-variant hover:text-secondary hover:bg-surface-container/40"
-              }`}
-            >
-              ▸ Iniciar Sesión / Registro
-            </Link>
+
+            {/* Sesión en Mobile */}
+            {user ? (
+              <div className="flex flex-col gap-2 pt-2 border-t border-outline-variant/30 mt-2">
+                <div className="flex items-center gap-2 px-3 py-2 bg-surface-container rounded border border-primary-container/30">
+                  <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_6px_#00f5ff]" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-mono text-[10px] text-outline uppercase tracking-widest">
+                      PILOTO ACTIVO
+                    </span>
+                    <span className="font-title-sm text-title-sm text-primary uppercase font-bold truncate">
+                      {user.gamerTag}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full text-left px-3 py-2 rounded font-label-md text-label-md uppercase tracking-wider text-secondary-container hover:bg-secondary-container/10 transition-colors flex items-center justify-between cursor-pointer"
+                >
+                  <span>✕ Cerrar Sesión</span>
+                  <span className="material-symbols-outlined text-[18px]">logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                onClick={closeMobileMenu}
+                className={`px-3 py-2.5 rounded font-label-lg text-label-lg uppercase tracking-wider transition-colors ${
+                  isAuth
+                    ? "bg-surface-container-high text-secondary font-bold border-l-2 border-secondary"
+                    : "text-on-surface-variant hover:text-secondary hover:bg-surface-container/40"
+                }`}
+              >
+                ▸ Iniciar Sesión / Registro
+              </Link>
+            )}
           </nav>
         </div>
 
