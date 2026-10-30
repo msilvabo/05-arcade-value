@@ -67,8 +67,11 @@ export const AuthCard: FC = () => {
     errParam || descParam
       ? { text: formatAuthError(errParam, descParam), isError: true }
       : msgParam === "confirmed"
-      ? { text: "¡CUENTA CONFIRMADA! YA PUEDES INICIAR SESIÓN", isError: false }
-      : null;
+        ? {
+            text: "¡CUENTA CONFIRMADA! YA PUEDES INICIAR SESIÓN",
+            isError: false,
+          }
+        : null;
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.location.hash) return;
@@ -89,14 +92,15 @@ export const AuthCard: FC = () => {
   }, []);
 
   const activeNotification = !dismissed
-    ? notification ?? hashNotification ?? initialFeedback
+    ? (notification ?? hashNotification ?? initialFeedback)
     : null;
 
-  // Calcula nivel de seguridad de contraseña (1 a 4)
+  // Calcula nivel de seguridad de contraseña (1 a 4 con mínimo 8 caracteres)
   const calculateSecurity = (pass: string) => {
-    let score = 0;
-    if (pass.length > 5) score++;
-    if (pass.length > 8) score++;
+    if (!pass) return 0;
+    // Si tiene menos de 8 caracteres, no alcanza nivel seguro (máximo score 1)
+    if (pass.length < 8) return 1;
+    let score = 2; // Cumple con el mínimo de 8 caracteres
     if (/[A-Z]/.test(pass) && /[0-9]/.test(pass)) score++;
     if (/[^A-Za-z0-9]/.test(pass)) score++;
     return score;
@@ -107,7 +111,9 @@ export const AuthCard: FC = () => {
     securityScore === 0
       ? "VACÍA"
       : securityScore === 1
-      ? "BAJA"
+      ? password.length < 8
+        ? "< 8 CHARS"
+        : "BAJA"
       : securityScore === 2
       ? "MEDIA"
       : securityScore === 3
@@ -144,8 +150,8 @@ export const AuthCard: FC = () => {
         showFeedback("⚠️ LAS CONTRASEÑAS NO COINCIDEN", true);
         return;
       }
-      if (password.length < 6) {
-        showFeedback("⚠️ LA CONTRASEÑA DEBE TENER AL MENOS 6 CARACTERES", true);
+      if (password.length < 8) {
+        showFeedback("⚠️ LA CONTRASEÑA DEBE TENER AL MENOS 8 CARACTERES", true);
         return;
       }
 
@@ -195,7 +201,10 @@ export const AuthCard: FC = () => {
     const res = await signInWithSocialProvider(provider);
     if (!res.success) {
       setIsLoading(false);
-      showFeedback(res.error || `ERROR AL CONECTAR CON ${provider.toUpperCase()}`, true);
+      showFeedback(
+        res.error || `ERROR AL CONECTAR CON ${provider.toUpperCase()}`,
+        true
+      );
     }
   };
 
@@ -268,7 +277,8 @@ export const AuthCard: FC = () => {
           </span>
         </div>
         <p className="mt-space-xs font-body-sm text-body-sm text-on-surface-variant max-w-sm mx-auto tracking-normal">
-          INICIA SESIÓN PARA SINCRONIZAR TUS RÉCORDS Y COMPETIR EN EL SALÓN DE LA FAMA
+          INICIA SESIÓN PARA SINCRONIZAR TUS RÉCORDS Y COMPETIR EN EL SALÓN DE
+          LA FAMA
         </p>
       </header>
 
@@ -276,7 +286,9 @@ export const AuthCard: FC = () => {
       {requiresVerification ? (
         <div className="flex flex-col items-center gap-space-md py-space-md text-center bg-surface-container-lowest p-space-md rounded border border-primary-container/40 shadow-inner">
           <div className="w-14 h-14 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container shadow-[0_0_16px_rgba(0,245,255,0.4)] animate-pulse">
-            <span className="material-symbols-outlined text-[32px]">mark_email_read</span>
+            <span className="material-symbols-outlined text-[32px]">
+              mark_email_read
+            </span>
           </div>
           <h2 className="font-title-lg text-title-lg text-primary uppercase tracking-wider">
             TRANSMISIÓN DE VERIFICACIÓN ENVIADA
@@ -288,7 +300,8 @@ export const AuthCard: FC = () => {
             </span>
           </p>
           <div className="p-space-sm bg-surface-container rounded border border-tertiary/30 text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wide">
-            ⚠️ CONFIRMACIÓN OBLIGATORIA: DEBES VERIFICAR TU CUENTA ANTES DE PODER ACCEDER AL VAULT.
+            ⚠️ CONFIRMACIÓN OBLIGATORIA: DEBES VERIFICAR TU CUENTA ANTES DE
+            PODER ACCEDER AL VAULT.
           </div>
           <button
             type="button"
@@ -315,7 +328,9 @@ export const AuthCard: FC = () => {
                     : "bg-transparent text-primary-fixed-dim hover:bg-surface-container"
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">key</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  key
+                </span>
                 INICIAR SESIÓN
               </button>
               <button
@@ -327,14 +342,18 @@ export const AuthCard: FC = () => {
                     : "bg-transparent text-secondary-container hover:bg-secondary-container/10"
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  how_to_reg
+                </span>
                 CREAR CUENTA
               </button>
             </div>
           ) : (
             <div className="flex items-center justify-between pb-space-sm mb-space-md border-b border-outline-variant/30">
               <span className="font-label-md text-label-md text-secondary-container uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">lock_reset</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  lock_reset
+                </span>
                 RECUPERACIÓN DE CLAVE DE ACCESO
               </span>
               <button
@@ -465,35 +484,43 @@ export const AuthCard: FC = () => {
 
                 {/* Medidor de Seguridad Retro (solo en registro) */}
                 {authMode === "register" && (
-                  <div className="flex items-center gap-1.5 pt-1">
-                    <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider text-[10px]">
-                      SEGURIDAD:
-                    </span>
-                    <div className="flex-1 grid grid-cols-4 gap-1 h-1.5 bg-surface-container-lowest p-0.5 rounded">
-                      <div
-                        className={`rounded-sm transition-colors duration-200 ${
-                          securityScore >= 1 ? "bg-secondary-container" : "bg-surface-container-highest"
-                        }`}
-                      />
-                      <div
-                        className={`rounded-sm transition-colors duration-200 ${
-                          securityScore >= 2 ? "bg-tertiary-container" : "bg-surface-container-highest"
-                        }`}
-                      />
-                      <div
-                        className={`rounded-sm transition-colors duration-200 ${
-                          securityScore >= 3 ? "bg-primary-container" : "bg-surface-container-highest"
-                        }`}
-                      />
-                      <div
-                        className={`rounded-sm transition-colors duration-200 ${
-                          securityScore >= 4 ? "bg-green-400" : "bg-surface-container-highest"
-                        }`}
-                      />
+                  <div className="flex flex-col gap-1 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider text-[10px]">
+                        SEGURIDAD:
+                      </span>
+                      <div className="flex-1 grid grid-cols-4 gap-1 h-1.5 bg-surface-container-lowest p-0.5 rounded">
+                        <div
+                          className={`rounded-sm transition-colors duration-200 ${
+                            securityScore >= 1 ? "bg-secondary-container" : "bg-surface-container-highest"
+                          }`}
+                        />
+                        <div
+                          className={`rounded-sm transition-colors duration-200 ${
+                            securityScore >= 2 ? "bg-tertiary-container" : "bg-surface-container-highest"
+                          }`}
+                        />
+                        <div
+                          className={`rounded-sm transition-colors duration-200 ${
+                            securityScore >= 3 ? "bg-primary-container" : "bg-surface-container-highest"
+                          }`}
+                        />
+                        <div
+                          className={`rounded-sm transition-colors duration-200 ${
+                            securityScore >= 4 ? "bg-green-400" : "bg-surface-container-highest"
+                          }`}
+                        />
+                      </div>
+                      <span className="font-label-sm text-label-sm text-outline uppercase text-[10px] min-w-16 text-right">
+                        {securityLabel}
+                      </span>
                     </div>
-                    <span className="font-label-sm text-label-sm text-outline uppercase text-[10px] w-12 text-right">
-                      {securityLabel}
-                    </span>
+                    {password.length > 0 && password.length < 8 && (
+                      <div className="font-mono text-[10px] text-secondary-container tracking-wider flex items-center gap-1 pt-0.5">
+                        <span className="material-symbols-outlined text-[12px]">warning</span>
+                        MÍNIMO 8 CARACTERES REQUERIDOS ({password.length}/8)
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -506,7 +533,9 @@ export const AuthCard: FC = () => {
                   htmlFor="confirm-password"
                   className="font-label-md text-label-md text-secondary-container tracking-widest uppercase flex items-center gap-1.5"
                 >
-                  <span className="material-symbols-outlined text-[15px]">verified_user</span>
+                  <span className="material-symbols-outlined text-[15px]">
+                    verified_user
+                  </span>
                   CONFIRMAR CONTRASEÑA
                 </label>
                 <div className="relative flex items-center">
@@ -556,10 +585,10 @@ export const AuthCard: FC = () => {
                 isLoading
                   ? "opacity-60 cursor-not-allowed bg-surface-container-high text-outline"
                   : authMode === "login"
-                  ? "bg-primary-container text-on-primary shadow-[0_0_20px_rgba(0,245,255,0.65)] hover:shadow-[0_0_30px_rgba(0,245,255,0.9)] hover:scale-[1.01] active:translate-y-0.5"
-                  : authMode === "register"
-                  ? "bg-secondary-container text-on-secondary shadow-[0_0_20px_rgba(255,77,128,0.65)] hover:shadow-[0_0_30px_rgba(255,77,128,0.9)] hover:scale-[1.01] active:translate-y-0.5"
-                  : "bg-tertiary-container text-on-tertiary shadow-[0_0_20px_rgba(222,231,0,0.65)] hover:shadow-[0_0_30px_rgba(222,231,0,0.9)]"
+                    ? "bg-primary-container text-on-primary shadow-[0_0_20px_rgba(0,245,255,0.65)] hover:shadow-[0_0_30px_rgba(0,245,255,0.9)] hover:scale-[1.01] active:translate-y-0.5"
+                    : authMode === "register"
+                      ? "bg-secondary-container text-on-secondary shadow-[0_0_20px_rgba(255,77,128,0.65)] hover:shadow-[0_0_30px_rgba(255,77,128,0.9)] hover:scale-[1.01] active:translate-y-0.5"
+                      : "bg-tertiary-container text-on-tertiary shadow-[0_0_20px_rgba(222,231,0,0.65)] hover:shadow-[0_0_30px_rgba(222,231,0,0.9)]"
               }`}
             >
               <span className="material-symbols-outlined text-[24px] group-hover:rotate-12 transition-transform">
@@ -569,10 +598,10 @@ export const AuthCard: FC = () => {
                 {isLoading
                   ? "PROCESANDO PROTOCOLO..."
                   : authMode === "login"
-                  ? "ENTRAR AL VAULT"
-                  : authMode === "register"
-                  ? "REGISTRAR PILOTO"
-                  : "ENVIAR TRANSMISIÓN"}
+                    ? "ENTRAR AL VAULT"
+                    : authMode === "register"
+                      ? "REGISTRAR PILOTO"
+                      : "ENVIAR TRANSMISIÓN"}
               </span>
               <span className="font-label-sm text-label-sm bg-surface-tint/30 px-1.5 py-0.5 rounded tracking-normal ml-1">
                 PRESS START
@@ -589,7 +618,9 @@ export const AuthCard: FC = () => {
                 className="w-full text-left flex items-start gap-space-sm cursor-pointer group"
               >
                 <div className="p-2 rounded bg-tertiary-container text-on-tertiary shadow-[0_0_12px_rgba(222,231,0,0.5)] shrink-0">
-                  <span className="material-symbols-outlined text-[24px]">sports_esports</span>
+                  <span className="material-symbols-outlined text-[24px]">
+                    sports_esports
+                  </span>
                 </div>
                 <div className="flex-1">
                   <div className="font-label-lg text-label-lg text-tertiary uppercase flex items-center justify-between group-hover:text-tertiary-fixed transition-colors">
@@ -599,7 +630,9 @@ export const AuthCard: FC = () => {
                     </span>
                   </div>
                   <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-snug">
-                    Acceso instantáneo a todos los juegos. Tus puntuaciones se guardarán únicamente en la memoria local (localStorage) de este dispositivo.
+                    Acceso instantáneo a todos los juegos. Tus puntuaciones se
+                    guardarán únicamente en la memoria local (localStorage) de
+                    este dispositivo.
                   </p>
                 </div>
               </button>
@@ -625,7 +658,10 @@ export const AuthCard: FC = () => {
                 disabled={isLoading}
                 className="py-space-sm px-space-md bg-surface-container hover:bg-surface-container-high rounded text-primary transition-all duration-150 flex items-center justify-center gap-space-xs font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-[0_0_12px_rgba(255,255,255,0.15)] cursor-pointer active:translate-y-0.5 border border-outline-variant/30 disabled:opacity-50"
               >
-                <svg className="w-4 h-4 fill-current text-secondary-container" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4 fill-current text-secondary-container"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
                 </svg>
                 GOOGLE
@@ -637,7 +673,10 @@ export const AuthCard: FC = () => {
                 disabled={isLoading}
                 className="py-space-sm px-space-md bg-surface-container hover:bg-surface-container-high rounded text-primary transition-all duration-150 flex items-center justify-center gap-space-xs font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-[0_0_12px_rgba(255,255,255,0.15)] cursor-pointer active:translate-y-0.5 border border-outline-variant/30 disabled:opacity-50"
               >
-                <svg className="w-4 h-4 fill-current text-primary-container" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4 fill-current text-primary-container"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     clipRule="evenodd"
                     fillRule="evenodd"
@@ -698,11 +737,16 @@ export const AuthCard: FC = () => {
 
       {/* Enlaces al pie del terminal */}
       <footer className="mt-space-md pt-space-xs text-center flex flex-wrap items-center justify-center gap-x-space-md gap-y-1 font-label-sm text-label-sm text-outline">
-        <Link href="/" className="hover:text-primary transition-colors uppercase tracking-widest text-primary-fixed-dim">
+        <Link
+          href="/"
+          className="hover:text-primary transition-colors uppercase tracking-widest text-primary-fixed-dim"
+        >
           ← VOLVER A LA BIBLIOTECA
         </Link>
         <span className="text-outline-variant">•</span>
-        <span className="uppercase tracking-widest">ARCADE VAULT SECURE TERMINAL</span>
+        <span className="uppercase tracking-widest">
+          ARCADE VAULT SECURE TERMINAL
+        </span>
       </footer>
     </div>
   );

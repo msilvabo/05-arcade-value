@@ -1,6 +1,6 @@
 # SPEC 13 — Medidas de Seguridad, Headers HTTP y Hardening de Supabase
 
-> **Estado:** Aprobado  
+> **Estado:** Implementado  
 > **Depende de:** 05-supabase-auth-y-perfiles.md, 07-leaderboard-y-tabla-de-juegos.md, 12-autenticacion-login-registro.md  
 > **Fecha:** 2026-10-29  
 > **Objetivo:** Implementar las medidas de seguridad y hardening del sistema mitigando las advertencias del Database Linter de Supabase, incorporando cabeceras de seguridad HTTP en Next.js y garantizando el requisito de contraseñas de al menos 8 caracteres con protección contra contraseñas filtradas y limitación de tasa de registro.

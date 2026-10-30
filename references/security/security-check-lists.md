@@ -1,34 +1,67 @@
-## Checklist de seguridad básico
+# Checklist de Seguridad y Guía de Hardening (Spec 13)
 
-  - [ ] RLS: Row Level Security habilitado en ambas tablas: `games` y `scores`
-  - [ ] Minimum password length — mínimo 8 caracteres
-  - [ ] Leaked password protection — (el warning 4)
-  - [ ] Max signup rate — limitar signups por IP (anti-bot)
-  - [ ] Headers de seguridad en Next.js
-  
-  Ej:
+## 1. Estado del Checklist de Seguridad
+
+- [x] **RLS (Row Level Security):** Habilitado y ratificado en `profiles`, `games` y `scores`. Política de `INSERT` restringida a usuarios autenticados (`auth.uid() = user_id`) y saneada la regla `WITH CHECK (true)` (`supabase/migrations/20261029120000_security_hardening.sql`).
+- [x] **Inmutabilidad de Search Path:** Función `public.handle_new_user()` fijada con `SET search_path = public`.
+- [x] **Revocación de EXECUTE:** Se revocó el permiso de ejecución pública sobre `public.handle_new_user()` y `public.rls_auto_enable()` para roles `anon`, `authenticated` y `public`.
+- [x] **Headers de Seguridad HTTP en Next.js:** Configurados en `next.config.ts` (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`).
+- [x] **Validación de Contraseña Mínima de 8 Caracteres en Frontend:** Implementada en `components/auth/AuthCard.tsx` (tiempo real, medidor retro adaptado y bloqueo pre-submit) y en mapeo de mensajes de `lib/services/auth.ts`.
+- [ ] **Configuración de Seguridad en Supabase Studio / Dashboard:** Requiere activación manual en panel web (ver Guía Operativa abajo).
+
+---
+
+## 2. Guía Operativa para Supabase Dashboard (Auth & Security)
+
+Dado que las configuraciones de seguridad del servicio GoTrue (Supabase Auth) se gestionan a nivel de infraestructura y no mediante DDL SQL, deben aplicarse los siguientes pasos en el **Dashboard de Supabase**:
+
+### 2.1 Leaked Password Protection (Mitigación Warning 4)
+
+1. Navega a tu proyecto en [Supabase Dashboard](https://supabase.com/dashboard).
+2. Ve a **Authentication** en el menú lateral izquierdo → **Security** (o **Password**).
+3. Localiza la sección **Password Protection** / **Compromised Passwords**.
+4. Activa el interruptor **Enable Leaked Password Protection** (verifica contra la base de HaveIBeenPwned).
+5. Haz clic en **Save**.
+
+### 2.2 Longitud Mínima de Contraseña (8 caracteres)
+
+1. En la misma sección **Authentication** → **Security** / **Password**.
+2. Localiza el campo **Minimum password length**.
+3. Cambia el valor a **`8`** (o superior).
+4. Haz clic en **Save**.
+
+### 2.3 Rate Limiting Anti-Bot (Max Signup Rate)
+
+1. Ve a **Authentication** → **Rate Limits**.
+2. Localiza las reglas de límite por IP:
+   - **Signups per hour / Max signup rate:** Configura un límite razonable (por ejemplo, `30` o `60` signups/hora por IP) para mitigar creación masiva automatizada de cuentas.
+   - **Token refresh / Password reset requests:** Ajusta a un rango prudente (ej. `30` peticiones/hora).
+3. Haz clic en **Save changes**.
+
+---
+
+## 3. Registro Histórico de Linter Warnings y Mitigaciones
+
+| Warning Linter                                       | Gravedad | Estado              | Mitigación Aplicada                                                                                 |
+| ---------------------------------------------------- | -------- | ------------------- | --------------------------------------------------------------------------------------------------- |
+| `function_search_path_mutable`                       | WARN     | ✅ Mitigado         | `SET search_path = public` en `public.handle_new_user()` (`20261029120000_security_hardening.sql`). |
+| `rls_policy_always_true`                             | WARN     | ✅ Mitigado         | Eliminada política `WITH CHECK (true)` en `public.scores`; ratificado `auth.uid() = user_id`.       |
+| `anon_security_definer_function_executable`          | WARN     | ✅ Mitigado         | `REVOKE EXECUTE` en `handle_new_user()` y `rls_auto_enable()` para `anon` y `public`.               |
+| `authenticated_security_definer_function_executable` | WARN     | ✅ Mitigado         | `REVOKE EXECUTE` en `handle_new_user()` y `rls_auto_enable()` para `authenticated`.                 |
+| `auth_leaked_password_protection`                    | WARN     | ⚙️ Config Dashboard | Habilitación guiada en **Authentication** → **Security** en Supabase Dashboard.                     |
+
+---
+
+## 4. Referencia de Cabeceras HTTP Aplicadas en `next.config.ts`
 
 ```ts
 const securityHeaders = [
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  },
 ];
-
-// En la config de Next.js:
-headers: async () => [
-  { source: '/(.*)', headers: securityHeaders }
-]
 ```
-
-## Por el lado de Supabase:
-
-| name                                               | title                                                 | level | facing   | categories   | description                                                                                                                                                                                                                                                                                    | detail                                                                                                                                                                                                                               | remediation                                                                                                            | metadata                                                                                                                                                                                                                          | cache_key                                                                            | observed_at              |
-| -------------------------------------------------- | ----------------------------------------------------- | ----- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------ |
-| function_search_path_mutable                       | Function Search Path Mutable                          | WARN  | EXTERNAL | ["SECURITY"] | Detects functions where the search_path parameter is not set.                                                                                                                                                                                                                                  | Function \\`public.handle_new_user\\` has a role mutable search_path                                                                                                                                                                 | https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable                       | {"schema":"public","name":"handle_new_user","type":"function"}                                                                                                                                                                    | function_search_path_mutable_public_handle_new_user_103c602272209b957819e94360e058dd | 2026-10-29T15:51:10.544Z |
-| rls_policy_always_true                             | RLS Policy Always True                                | WARN  | EXTERNAL | ["SECURITY"] | Detects RLS policies that use overly permissive expressions like \\`USING (true)\\` or \\`WITH CHECK (true)\\` for UPDATE, DELETE, or INSERT operations. SELECT policies with \\`USING (true)\\` are intentionally excluded as this pattern is often used deliberately for public read access. | Table `public.scores` has an RLS policy `Permitir registro libre de puntuaciones` for `INSERT` that allows unrestricted access (WITH CHECK clause is always true). This effectively bypasses row-level security for -.               | https://supabase.com/docs/guides/database/database-linter?lint=0024_permissive_rls_policy                              | {"schema":"public","name":"scores","type":"table","qual":null,"roles":["-"],"command":"INSERT","with_check":"true","policy_name":"Permitir registro libre de puntuaciones","permissive_using":false,"permissive_with_check":true} | rls_policy_always_true_public_scores_Permitir registro libre de puntuaciones         | 2026-10-29T15:51:10.544Z |
-| anon_security_definer_function_executable          | Public Can Execute SECURITY DEFINER Function          | WARN  | EXTERNAL | ["SECURITY"] | Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.                                                                             | Function `public.handle_new_user()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/handle_new_user`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.          | https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable          | {"schema":"public","name":"handle_new_user","language":"plpgsql","arguments":"","security_definer":true}                                                                                                                          | anon_security_definer_function_executable_public_handle_new_user_                    | 2026-10-29T15:51:10.544Z |
-| anon_security_definer_function_executable          | Public Can Execute SECURITY DEFINER Function          | WARN  | EXTERNAL | ["SECURITY"] | Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.                                                                             | Function `public.rls_auto_enable()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/rls_auto_enable`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.          | https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable          | {"schema":"public","name":"rls_auto_enable","language":"plpgsql","arguments":"","security_definer":true}                                                                                                                          | anon_security_definer_function_executable_public_rls_auto_enable_                    | 2026-10-29T15:51:10.544Z |
-| authenticated_security_definer_function_executable | Signed-In Users Can Execute SECURITY DEFINER Function | WARN  | EXTERNAL | ["SECURITY"] | Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.                                                                       | Function `public.handle_new_user()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/handle_new_user`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional. | https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable | {"schema":"public","name":"handle_new_user","language":"plpgsql","arguments":"","security_definer":true}                                                                                                                          | authenticated_security_definer_function_executable_public_handle_new_user_           | 2026-10-29T15:51:10.544Z |
-| authenticated_security_definer_function_executable | Signed-In Users Can Execute SECURITY DEFINER Function | WARN  | EXTERNAL | ["SECURITY"] | Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.                                                                       | Function `public.rls_auto_enable()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/rls_auto_enable`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional. | https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable | {"schema":"public","name":"rls_auto_enable","language":"plpgsql","arguments":"","security_definer":true}                                                                                                                          | authenticated_security_definer_function_executable_public_rls_auto_enable_           | 2026-10-29T15:51:10.544Z |
-| auth_leaked_password_protection                    | Leaked Password Protection Disabled                   | WARN  | EXTERNAL | ["SECURITY"] | Leaked password protection is currently disabled.                                                                                                                                                                                                                                              | Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.                                                                                             | https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection               | {"entity":"Auth","type":"auth"}                                                                                                                                                                                                   | auth_leaked_password_protection                                                      |                          |
