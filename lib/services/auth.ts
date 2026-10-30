@@ -23,9 +23,19 @@ function mapAuthErrorToArcadeMessage(errorMsg: string): string {
     return "ESTE CORREO YA POSEE UNA LICENCIA DE PILOTO ACTIVA";
   }
   if (normalized.includes("password should be at least")) {
-    return "LA CONTRASEÑA DEBE TENER AL MENOS 6 CARACTERES";
+    return "LA CONTRASEÑA DEBE TENER AL MENOS 8 CARACTERES";
   }
-  if (normalized.includes("rate limit") || normalized.includes("too many requests")) {
+  if (
+    normalized.includes("pwned") ||
+    normalized.includes("breach") ||
+    normalized.includes("leaked")
+  ) {
+    return "CONTRASEÑA VULNERADA // ESTA CLAVE APARECE EN FILTRACIONES GLOBALES. ELIGE UNA MÁS SEGURA.";
+  }
+  if (
+    normalized.includes("rate limit") ||
+    normalized.includes("too many requests")
+  ) {
     return "TERMINAL BLOQUEADO TEMPORALMENTE POR EXCESO DE INTENTOS";
   }
   return `ERROR DEL TERMINAL // ${errorMsg.toUpperCase()}`;
@@ -62,7 +72,11 @@ export async function signUpPilot({
     }
 
     // Si Supabase devuelve usuario pero las identidades están vacías, suele significar email ya registrado
-    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    if (
+      data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+    ) {
       return {
         success: false,
         error: "ESTE CORREO YA POSEE UNA LICENCIA DE PILOTO ACTIVA",
@@ -238,8 +252,11 @@ export async function getCurrentPilotProfile(): Promise<AuthUserSession | null> 
       return null;
     }
 
-    let gamerTag = (user.user_metadata?.gamer_tag as string | undefined)?.toUpperCase();
-    let avatarUrl = (user.user_metadata?.avatar_url as string | undefined) || null;
+    let gamerTag = (
+      user.user_metadata?.gamer_tag as string | undefined
+    )?.toUpperCase();
+    let avatarUrl =
+      (user.user_metadata?.avatar_url as string | undefined) || null;
 
     if (!gamerTag) {
       const { data: profile } = await supabase
